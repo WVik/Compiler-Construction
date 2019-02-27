@@ -2,9 +2,31 @@
 #include<stdlib.h>
 #include "lexer.h"
 
+
 char* getTokenString()
 {
-	
+	if(state == 2)
+	{
+		//ID vs Keyword
+	}
+
+	if(state ==6)
+	{
+		if(end-begin+1 <= 20)
+			return tokenList[6];
+		return "ERROR";
+	}
+
+	if(state==13)
+	{
+		//Lookup
+		if(end-begin+1 <= 30)
+			return tokenList[13];
+		return "ERROR";
+
+	}
+
+	return tokenList[state];		
 }
 
 
@@ -32,7 +54,7 @@ int getTransitionIndex(char c)
 	if('A'<=c && c<='Z')
 		return 2;
 
-	if(c=='a' || ('e'<=c && c<='z')
+	if(c=='a' || ('e'<=c && c<='z'))
 		return 3;
 
 	if('b'<=c && c<='d')
@@ -67,8 +89,8 @@ int getTransitionIndex(char c)
 			return 17;
 		case '+':
 			return 18;
-		case '-':
-			return 19;
+		// case '-':
+		// 	return 19;
 		case '*':
 			return 20;
 		case '/':
@@ -89,19 +111,22 @@ int getTransitionIndex(char c)
 			return 28;
 		case '\n':
 			return 29;
+		default :
+			return -1;
 
 	}
 
 }
 
-void populateTokenTable()
+void populateTokenList()
 {
 	for(int i=0;i<numStates;i++)
-		{tokenList[i] = (char*)malloc(maxTokenLength*sizeof(char));
-		 tokenList[i] = NULL;
+		tokenList[i] = (char*)malloc(maxTokenLength*sizeof(char));
+		
 
 	tokenList[6] = "TK_ID";
 	tokenList[9] = "TK_RECORDID";
+	tokenList[13] = "TK_FUNID";
 	tokenList[16] = "TK_OR";
 	tokenList[19] = "TK_AND";
 	tokenList[21] = "TK_NUM";
@@ -131,91 +156,60 @@ void populateTokenTable()
 
 }
 
+void populateKeywordList()
+{
+
+}
+
 
 void initializeLexer()
 {
 	state = 0;
-	primaryBuffer = (char*)malloc(bufferLength*sizeof(char));
-	secondaryBuffer = (char*)malloc(bufferLength*sizeof(char));
+	buffer1 = (char*)malloc(bufferLength*sizeof(char));
+	buffer2 = (char*)malloc(bufferLength*sizeof(char));
+	inputBuffer = buffer1;
 	tokenList = (char**)malloc(numStates*sizeof(char*));
 	begin = end = 0;
+	stateFlags = (int*)malloc(numStates*sizeof(int));
 
 	for(int i=0;i<numStates;i++)
 		for(int j=0;j<numInputs;j++)		
 			{
-				transitionTable[i][j].flag = 0;
-			 	transitionTable[i][j].nextState = 0;
+				stateFlags[i] = 0;
+			 	transitionTable[i][j] = 0;
 			}
    	
    	populateTransitionTable();
-   	populateTokenTable();
+   	populateTokenList();
+   	populateKeywordList();
 
 }
 
 void populateTransitionTable()
 {
-	
-	//----------STATE 0 - START----------------
-	transitionTable[0][3].nextState = 1;
-	transitionTable[0][3].flag = 1;
+	/*
+	TODO:
+	* For each state set the stateFlags properly
+	* For each state's every transition, fill the transition accordingly
+	* Handle states with 'others' transition separately
+	*/
 
-	transitionTable[0][4].nextState = 3;
-	transitionTable[0][4].flag = 1;
+	transitionTable[0][3] = 1;
+	stateFlags[0] = 1;
 
-	transitionTable[0][getIndex('#')].nextState = 7;
-	transitionTable[0][getIndex('#')].flag = 1;
 
-	transitionTable[0][getIndex('_')].nextState = 10;
-	transitionTable[0][getIndex('_')].flag = 1;
+	transitionTable[0][20] = 45;
 
-	transitionTable[0][getIndex('@')].nextState = 14;
-	transitionTable[0][getIndex('@')].flag = 1;
 
-	transitionTable[0][getIndex('/')].nextState = 44;
-	transitionTable[0][getIndex('/')].flag = 2;
-
-	transitionTable[0][getIndex('*')].nextState = 45;
-	transitionTable[0][getIndex('*')].flag = 2;
-
-	transitionTable[0][getIndex('-')].nextState = 46;
-	transitionTable[0][getIndex('-')].flag = 2;
-
-	transitionTable[0][getIndex('+')].nextState = 47;
-	transitionTable[0][getIndex('+')].flag = 2;
-
-	transitionTable[0][getIndex('[')].nextState = 48;
-	transitionTable[0][getIndex('[')].flag = 2;
-
-	transitionTable[0][getIndex(']')].nextState = 49;
-	transitionTable[0][getIndex(']')].flag = 2;
-
-	transitionTable[0][getIndex('(')].nextState = 50;
-	transitionTable[0][getIndex('(')].flag = 2;
-
-	transitionTable[0][getIndex(')')].nextState = 51;
-	transitionTable[0][getIndex(')')].flag = 2;
-
-	transitionTable[0][getIndex(',')].nextState = 52;
-	transitionTable[0][getIndex(',')].flag = 2;
-
-	transitionTable[0][getIndex(';')].nextState = 53;
-	transitionTable[0][getIndex(';')].flag = 2;
-
-	transitionTable[0][getIndex(':')].nextState = 54;
-	transitionTable[0][getIndex(':')].flag = 2;
-
-	transitionTable[0][getIndex('.')].nextState = 55;
-	transitionTable[0][getIndex('.')].flag = 2;
-
-	transitionTable[0][getIndex('~')].nextState = 56;
-	transitionTable[0][getIndex('~')].flag = 2;
+	transitionTable[45][20] = 45;
+	stateFlags[45] = 2;
 
 
 }
 
 void getStream(FILE* fp)
 {
-	fread(inputBuffer, 1, bufferLength, fp);
+	int numRead = fread(inputBuffer, sizeof(char), bufferLength, fp);
 	printf("%s\n",inputBuffer);	
 }
 
@@ -224,7 +218,10 @@ int main()
 {
 	initializeLexer();
     FILE* fp = fopen("sample.txt","r");
-    getStream(fp);
+    //getStream(fp);
+
+    char* t = getNextToken(fp);
+    printf("%s",t);
 
 	return 0;
 }
@@ -234,19 +231,21 @@ char* getNextToken(FILE* fp)
 {
 	if(end == bufferLength || end == 0)
 		getStream(fp);
-
-	while(true)
+    
+	while(1)
 	{
 		char ch = inputBuffer[end];
-		state = transitionTable[state][getIndex(ch)].nextState;
 
-		if(transitionTable[state][getIndex(ch)].flag == 0)
-			printf("Error");
+		end++;
 
-		if(transitionTable[state][getIndex(ch)].flag == 1)
-			continue;
+		int index = getTransitionIndex(ch);
 
-		if(transitionTable[state][getIndex(ch)].flag == 2)
+		state = transitionTable[state][index];
+
+		if(stateFlags[state] == 0)
+			{state = 0; continue;}
+
+		if(stateFlags[state] == 2)
 			return getTokenString(); 
 	}
 

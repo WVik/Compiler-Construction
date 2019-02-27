@@ -7,18 +7,13 @@
 #define keywordHashMul 271
 #define maxTokenLength 15
 
-typedef struct tNode{
-	short nextState;
-	short flag; 
-}transitionNode;
+
+
 
 typedef struct tInfo{
 	char* lexeme;
 	char* token;
-
-	//flag = 0 => ERROR | flag = 1 => GOTO NEXT | flag = 2 => ACCEPT
 	int flag;
-
 	int lineNumber;
 }tokenInfo;
 
@@ -27,16 +22,20 @@ typedef struct tInfo{
 
 
 int begin,end,state;
-char* buffer1, *buffer2,*inputBuffer;
+char *buffer1, *buffer2,*inputBuffer;
 char** tokenList;
+char** keyWordTable;
+int transitionTable[numStates][numInputs];
 
-transitionNode transitionTable[numStates][numInputs];
+//flag = 0 => ERROR | flag = 1+x => ACCEPT + x RETRACT
+int* stateFlags;
+
 
 char* getNextToken(FILE* fp);
 void getStream();
 void populateTransitionTable();
 long hash(char* c);
 char* getTokenString();
-int getTransitionIndex();
+int getTransitionIndex(char c);
 void populateTransitionTable();
-void populateTokenTable();
+void populateTokenList();
