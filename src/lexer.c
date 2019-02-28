@@ -5,6 +5,8 @@
 char* keywords[] = {"with","parameters","end","while","type","_main","global","parameter","list","input","output","int","real","endwhile","if","then","endif","read","write","return","call","record","endrecord","else"};
 char* tokens[] = {"TK_WITH","TK_PARAMETERS","TK_END","TK_WHILE","TK_TYPE","TK_MAIN","TK_GLOBAL","TK_PARAMETER","TK_LIST","TK_INPUT","TK_OUTPUT","TK_INT","TK_REAL","TK_ENDWHILE","TK_IF","TK_THEN","TK_ENDIF","TK_READ","TK_WRITE","TK_RETURN","TK_CALL","TK_RECORD","TK_ENDRECORD","TK_ELSE"};
 
+
+
 char* getTokenString(char* lexeme)
 {
 	if(state == 2)
@@ -20,7 +22,7 @@ char* getTokenString(char* lexeme)
 	{
 		if(end-begin+1 <= 20)
 			return tokenList[6];
-		return "ERROR";
+		return "TK_ERROR";
 	}
 
 	if(state==13)
@@ -31,7 +33,7 @@ char* getTokenString(char* lexeme)
 		{
 			if(end-begin+1 <= 30)
 				return tokenList[13];
-			return "ERROR";	
+			return "TK_ERROR";	
 		}
 
 		return k->token;
@@ -148,6 +150,7 @@ void populateTokenList()
 	tokenList[28] = "TK_ASSIGNOP";
 	tokenList[29] = "TK_LT";
 	tokenList[30] = "TK_LT";
+	tokenList[31] = "TK_LE";
 	tokenList[32] = "TK_LT";
 	tokenList[34] = "TK_GT";
 	tokenList[35] = "TK_GE";
@@ -201,12 +204,13 @@ void initializeLexer()
 		}
 
 	for(int i=0;i<numStates;i++)
-		for(int j=0;j<numInputs;j++)		
-			{
-				stateFlags[i] = 0;
+		{
+			stateFlags[i] = 0;
+		
+			for(int j=0;j<numInputs;j++)		
 			 	transitionTable[i][j] = -1;
-			}
-   	
+   		}
+
    	populateTransitionTable();
    	populateTokenList();
    	populateKeywordTable();
@@ -478,7 +482,7 @@ void populateTransitionTable()
 	stateFlags[40] = 1;
 	
 	//State 41
-	stateFlags[41] = 3;
+	stateFlags[41] = 0;
 	
 	//State 42
 	transitionTable[42][28] = 43;
@@ -507,10 +511,12 @@ void getStream(FILE* fp)
 int main()
 {
 
-	printf("%s\n",keywords[7]);
 	initializeLexer();
+	//printf("%s\n",KeywordTable[hash("while")]->head->next->token);
+
+	
     FILE* fp = fopen("sample.txt","r");
-    getStream(fp);
+    //getStream(fp);
     char* t = getNextToken(fp);
     
     while(t!=NULL)
@@ -525,21 +531,37 @@ int main()
 
 char* getNextToken(FILE* fp)
 {
+	//Reset state to 0
+	state = 0;
+
 	if(end == bufferLength || end == 0)
 		getStream(fp);
-    
+
 	while(1)
 	{
+
 		char ch = inputBuffer[end];
 		if(ch == NULL)
 			return NULL;
 
 		int index = getTransitionIndex(ch);
 
+		//Transit to next state
 		state = transitionTable[state][index];
 
+		//Invalid state
+		if(state == -1)
+			return "TK_ERROR";
+		
+
+
 		if(stateFlags[state] == 0)
-			{state = 0; continue;}
+			{
+				
+				begin = end;
+				end--;
+				state = 0;
+			}
 
 
 		if(stateFlags[state] >= 2)
@@ -549,15 +571,17 @@ char* getNextToken(FILE* fp)
 				end -= (stateFlags[state]-2);
 
 				//Get lexeme
-				char* lexeme = (char*)malloc(sizeof(char)*(end-begin+1));
+				char* lexeme = (char*)malloc(sizeof(char)*(end-begin+2));
+				lexeme[end-begin+1] = '\0';
 
 				for(int i=begin;i<=end;i++)
-					lexeme[i] = inputBuffer[i];
+					lexeme[i-begin] = inputBuffer[i];
 
-				//printf("%s\n",lexeme);
+				
 				end++;
 				begin=end;
 				//Get token corresponding to lexeme;
+
 				return getTokenString(lexeme); 
 			}
 		end++;

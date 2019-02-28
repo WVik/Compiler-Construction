@@ -27,6 +27,7 @@ KeywordNode getNode(LinkedList l, char* input)
 	{
 		if(strcmp(temp->keyword, input) == 0)
 			return temp;
+		temp = temp->next;
 	}
 
 	return NULL;
