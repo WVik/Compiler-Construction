@@ -2,12 +2,18 @@
 #include<stdlib.h>
 #include "lexer.h"
 
+char* keywords[] = {"with","parameters","end","while","type","_main","global","parameter","list","input","output","int","real","endwhile","if","then","endif","read","write","return","call","record","endrecord","else"};
+char* tokens[] = {"TK_WITH","TK_PARAMETERS","TK_END","TK_WHILE","TK_TYPE","TK_MAIN","TK_GLOBAL","TK_PARAMETER","TK_LIST","TK_INPUT","TK_OUTPUT","TK_INT","TK_REAL","TK_ENDWHILE","TK_IF","TK_THEN","TK_ENDIF","TK_READ","TK_WRITE","TK_RETURN","TK_CALL","TK_RECORD","TK_ENDRECORD","TK_ELSE"};
 
-char* getTokenString()
+char* getTokenString(char* lexeme)
 {
 	if(state == 2)
 	{
-		//ID vs Keyword
+		KeywordNode k = getNode(KeywordTable[hash(lexeme)],lexeme);
+		if(k==NULL)
+			return "TK_FIELDID";
+
+		return k->token;
 	}
 
 	if(state ==6)
@@ -19,10 +25,18 @@ char* getTokenString()
 
 	if(state==13)
 	{
-		//Lookup
-		if(end-begin+1 <= 30)
-			return tokenList[13];
-		return "ERROR";
+		KeywordNode k = getNode(KeywordTable[hash(lexeme)],lexeme);
+		
+		if(k==NULL)
+		{
+			if(end-begin+1 <= 30)
+				return tokenList[13];
+			return "ERROR";	
+		}
+
+		return k->token;
+
+		
 
 	}
 
@@ -156,9 +170,17 @@ void populateTokenList()
 
 }
 
-void populateKeywordList()
+void populateKeywordTable()
 {
 
+
+	for(int i=0;i<numKeywords;i++)
+	{
+		KeywordNode temp = (KeywordNode)malloc(sizeof(struct keyNode));
+		temp->token = tokens[i];
+		temp->keyword = keywords[i];
+		push(KeywordTable[hash(keywords[i])],temp);
+	}
 }
 
 
@@ -171,6 +193,12 @@ void initializeLexer()
 	tokenList = (char**)malloc(numStates*sizeof(char*));
 	begin = end = 0;
 	stateFlags = (int*)malloc(numStates*sizeof(int));
+	KeywordTable = (LinkedList*)malloc(keywordHashModulo*sizeof(LinkedList));
+
+	for(int i=0;i<keywordHashModulo;i++)
+		{
+			KeywordTable[i] = (LinkedList)malloc(sizeof(struct linkedList));
+		}
 
 	for(int i=0;i<numStates;i++)
 		for(int j=0;j<numInputs;j++)		
@@ -181,7 +209,7 @@ void initializeLexer()
    	
    	populateTransitionTable();
    	populateTokenList();
-   	populateKeywordList();
+   	populateKeywordTable();
 
 }
 
@@ -472,18 +500,24 @@ void populateTransitionTable()
 void getStream(FILE* fp)
 {
 	int numRead = fread(inputBuffer, sizeof(char), bufferLength, fp);
-	printf("%s\n",inputBuffer);	
+	//printf("%d\n",inputBuffer[6]);	
 }
 
 
 int main()
 {
+
+	printf("%s\n",keywords[7]);
 	initializeLexer();
     FILE* fp = fopen("sample.txt","r");
-    //getStream(fp);
-
+    getStream(fp);
     char* t = getNextToken(fp);
-    printf("%s",t);
+    
+    while(t!=NULL)
+   	{ 
+   		printf("%s\n",t);
+    	t = getNextToken(fp);
+	}
 
 	return 0;
 }
@@ -497,8 +531,8 @@ char* getNextToken(FILE* fp)
 	while(1)
 	{
 		char ch = inputBuffer[end];
-
-		end++;
+		if(ch == NULL)
+			return NULL;
 
 		int index = getTransitionIndex(ch);
 
@@ -507,8 +541,26 @@ char* getNextToken(FILE* fp)
 		if(stateFlags[state] == 0)
 			{state = 0; continue;}
 
+
 		if(stateFlags[state] >= 2)
-			return getTokenString(); 
+			{
+				
+				//Retract using flag
+				end -= (stateFlags[state]-2);
+
+				//Get lexeme
+				char* lexeme = (char*)malloc(sizeof(char)*(end-begin+1));
+
+				for(int i=begin;i<=end;i++)
+					lexeme[i] = inputBuffer[i];
+
+				//printf("%s\n",lexeme);
+				end++;
+				begin=end;
+				//Get token corresponding to lexeme;
+				return getTokenString(lexeme); 
+			}
+		end++;
 	}
 
 	return NULL;
