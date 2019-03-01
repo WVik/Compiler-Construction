@@ -6,7 +6,7 @@ char* keywords[] = {"with","parameters","end","while","type","_main","global","p
 char* tokens[] = {"TK_WITH","TK_PARAMETERS","TK_END","TK_WHILE","TK_TYPE","TK_MAIN","TK_GLOBAL","TK_PARAMETER","TK_LIST","TK_INPUT","TK_OUTPUT","TK_INT","TK_REAL","TK_ENDWHILE","TK_IF","TK_THEN","TK_ENDIF","TK_READ","TK_WRITE","TK_RETURN","TK_CALL","TK_RECORD","TK_ENDRECORD","TK_ELSE"};
 
 
-
+//Get the token string corresponding to the lexeme
 char* getTokenString(char* lexeme)
 {
 	if(state == 2)
@@ -46,6 +46,7 @@ char* getTokenString(char* lexeme)
 }
 
 
+//Hash using Horner's rule
 long hash(char* c)
 {
 	long temp = 0;
@@ -60,6 +61,7 @@ long hash(char* c)
 }
 
 
+//Get index in the transition table corresponding to the input
 int getTransitionIndex(char c)
 {
 	if(c == '0' || c == '1' || c == '8' || c == '9')
@@ -134,6 +136,7 @@ int getTransitionIndex(char c)
 
 }
 
+//Generate table for tokens
 void populateTokenList()
 {
 	for(int i=0;i<numStates;i++)
@@ -173,6 +176,7 @@ void populateTokenList()
 
 }
 
+//Make hash table for keywords
 void populateKeywordTable()
 {
 
@@ -187,6 +191,7 @@ void populateKeywordTable()
 }
 
 
+//Set up data structures and variables for lexer
 void initializeLexer()
 {
 	state = 0;
@@ -217,6 +222,7 @@ void initializeLexer()
 
 }
 
+//Define transitions for the DFA
 void populateTransitionTable()
 {
 	/*
@@ -501,34 +507,16 @@ void populateTransitionTable()
 
 }
 
+//Read input stream into the buffer
 void getStream(FILE* fp)
 {
 	int numRead = fread(inputBuffer, sizeof(char), bufferLength, fp);
-	//printf("%d\n",inputBuffer[6]);	
+	if(numRead<bufferLength)
+		inputBuffer[numRead] = ' ';
 }
 
 
-int main()
-{
-
-	initializeLexer();
-	//printf("%s\n",KeywordTable[hash("while")]->head->next->token);
-
-	
-    FILE* fp = fopen("sample.txt","r");
-    //getStream(fp);
-    char* t = getNextToken(fp);
-    
-    while(t!=NULL)
-   	{ 
-   		printf("%s\n",t);
-    	t = getNextToken(fp);
-	}
-
-	return 0;
-}
-
-
+//Get the next token from the input stream
 char* getNextToken(FILE* fp)
 {
 	//Reset state to 0
@@ -578,9 +566,20 @@ char* getNextToken(FILE* fp)
 					lexeme[i-begin] = inputBuffer[i];
 
 				
+				/*
+				*TODO:
+					1) Make Token Info structure
+					2) Convert strings to Enum defined in masterHeader.h
+				*/
+				//TokenInfo newToken = (TokenInfo)malloc(sizeof(tokenInfo));
+				//newToken->lexeme = (char*)malloc(sizeof(char)*(end-begin+2));
+				//newToken->[end-begin+1] = '\0';
+
 				end++;
 				begin=end;
 				//Get token corresponding to lexeme;
+
+
 
 				return getTokenString(lexeme); 
 			}
@@ -588,4 +587,25 @@ char* getNextToken(FILE* fp)
 	}
 
 	return NULL;
+}
+
+
+int main()
+{
+
+	initializeLexer();
+	//printf("%s\n",KeywordTable[hash("while")]->head->next->token);
+
+	
+    FILE* fp = fopen("sample.txt","r");
+    //getStream(fp);
+    char* t = getNextToken(fp);
+    
+    while(t!=NULL)
+   	{ 
+   		printf("%s ",t);
+    	t = getNextToken(fp);
+	}
+
+	return 0;
 }

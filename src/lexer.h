@@ -17,6 +17,8 @@ typedef struct tInfo{
 	int lineNumber;
 }tokenInfo;
 
+typedef struct tokenInfo* TokenInfo;
+
 //typedef struct transNode* TransNode;
 
 
@@ -43,5 +45,3 @@ int getTransitionIndex(char c);
 void populateTransitionTable();
 void populateTokenList();
 int currentLineNumber = 1;
-int currentBuffer;
-int begin1,end1,begin2,end2,bufferFlag;
