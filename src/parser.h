@@ -12,3 +12,5 @@ int containsNullProd(int i);
 void computeFollow(int nonTerm);
 void computeFollowHelper(int RuleNum, int nonTerm);
 void printFirstFollow(FirstFollowNode * list, int i);
+void createParseTable();
+void printParseTree();

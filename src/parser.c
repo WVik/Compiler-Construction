@@ -7,7 +7,9 @@
 void initializeParser(FILE* fp)
 {
 	
- 
+  //Initialize Grammar Production Rules
+  g = (Grammar)malloc(sizeof(Production)*numRules);
+
 	RHSRuleIndices = (int**)malloc(numNonTerminals*sizeof(int*));
   currentIndex = (int*)malloc(sizeof(int)*numNonTerminals);
 
@@ -25,14 +27,11 @@ void initializeParser(FILE* fp)
     visited[i] = 0;
 
 
-
+  //Parse the grammar and make liked lists corresponding to each rule
    getGrammar(fp);
 
-	//tableParseTable = (int**)malloc(sizeof(int*)*numNonTerminals);
-	//for(int i=0;i<numNonTerminals;i++)
-		//tableParseTable[i] = (int*)malloc(sizeof(int)*numTerminals);
-	//table ParseTable = createParseTable(g);
-
+	
+  //Definitions and delcations for First and Follow computation
   Ft = (FirstFollowNode*)malloc(numNonTerminals*sizeof(FirstFollowNode));
   for(int i=0;i<numNonTerminals;i++)
     Ft->head = NULL;
@@ -47,10 +46,19 @@ void initializeParser(FILE* fp)
   dollar->id = terminal;
 
   push(Fl,0,dollar);
-
-
-
   ComputeFirstAndFollow();
+
+  //Definitions and delcations for Predictive Parsing Table
+  ParseTable = (int**)malloc(sizeof(int*)*numNonTerminals);
+  for(int i=0;i<numNonTerminals;i++)
+    {
+      ParseTable[i] = (int*)malloc(sizeof(int)*numTerminals);
+      for(int j=0;j<numTerminals;j++)
+        ParseTable[i][j] = -1;
+    }
+
+  createParseTable();
+
 }
 
 
@@ -172,12 +180,11 @@ void computeFollowHelper(int RuleNum, int nonTerm)
     if(temp->id == nonterminal && nonTerm == (temp->term).nt)
       sameNonTerm = 1;
 
-
-
     /*Recursive follow case:
         1) The last nonterminal goes to eps
         2) The last nonterminal is the one whose follow is to be computed
     */
+
     if(temp->next == NULL && ((sameNonTerm==1) || (nonTerm == (temp->term).nt && temp->id == nonterminal)))
       {
         
@@ -195,7 +202,6 @@ void computeFollowHelper(int RuleNum, int nonTerm)
 
     temp = temp->next;
   }
-
 }
 
 
@@ -244,6 +250,7 @@ void computeFirst(int nonTerm)
 
   	}
 }
+
 
 
 
@@ -373,8 +380,6 @@ void getGrammar(FILE* fp)
             return;
         }
 
-   	g = (Grammar)malloc(sizeof(Production)*numRules);
-
    	int ruleIndex = 0;
    	char line[MAX];
 
@@ -483,24 +488,6 @@ void getGrammar(FILE* fp)
    				} 	
    		}
    		
-/*
-        printf("%d ",g[ruleIndex]->lhs);
-
-    RhsNode temp = g[ruleIndex]->head;
-
-    while(temp!=NULL)
-    {
-      if(temp->id == nonterminal)
-        printf("%d ",(temp->term).t);
-
-      else
-        printf("%d ",(temp->term).nt);
-
-      temp = temp->next;
-    }
-    printf("\n");
-    //ruleNum++;
-    */
     ruleIndex++;
 
 
@@ -508,6 +495,88 @@ void getGrammar(FILE* fp)
   }
 
 
+void createParseTable()
+{
+  for(int i=0;i<numRules;i++)
+  {
+    int ntIndex = g[i]->lhs; 
+    RhsNode rhsTerm = g[i]->head; 
+    int epsFlag = 0;
+    while(rhsTerm!=NULL)
+    {
+      epsFlag = 0;
+      if(rhsTerm->id == terminal)
+      {
+        if((rhsTerm->term).t == eps)
+        {
+          epsFlag = 1;
+          break;
+        }
+        ParseTable[ntIndex][(rhsTerm->term).t] = i;
+        break;
+      }
+
+      RhsNode firstNode = Ft[(rhsTerm->term).nt].head;
+      while(firstNode!=NULL)
+      {
+        if((firstNode->term).nt == eps)
+        { 
+          epsFlag=1;
+          firstNode = firstNode->next;
+          continue;
+        }
+
+        ParseTable[ntIndex][(firstNode->term).t] = i;
+        firstNode = firstNode->next;
+
+      }
+      if(epsFlag == 0)
+        break;
+      rhsTerm = rhsTerm->next;
+    }
+
+    if(epsFlag == 1)
+    {
+      RhsNode temp =Fl[ntIndex].head;
+      
+      while(temp!=NULL)
+      {
+        
+        ParseTable[ntIndex][(temp->term).t] = i;
+        temp=temp->next;
+      }
+    }
+
+  }
+
+  for(int i=0;i<numNonTerminals;i++)
+  {
+    RhsNode flNode = Fl[i].head;
+    while(flNode!=NULL)
+    {
+      if(ParseTable[i][(flNode->term).t] <= 0)
+        ParseTable[i][(flNode->term).t] = SYNCH;
+      flNode = flNode->next;
+    }
+  }
+
+  //Synchronize using a synchronize
+  
+  printParseTree();
+
+
+}
+
+void printParseTree(){
+
+    for(int i=0;i<numNonTerminals;i++)
+    {
+      for(int j=0;j<numTerminals;j++)
+        printf("%d ",ParseTable[i][j]);
+      printf("\n");
+    }
+
+}
 
 
 int main()

@@ -2,10 +2,11 @@
 
 # define MAX 500
 # define numNonTerminals 51
-# define numTerminals 54
+# define numTerminals 55
 # define MAX 500
-#define numRules 92
-#define maxRHSIndices 10
+# define numRules 92
+# define maxRHSIndices 10
+# define SYNCH -2;
 
 
 typedef enum nonTerminal {program,mainFunction,otherFunctions,function,input_par,output_par,parameter_list,dataType,primitiveDatatype,
@@ -75,7 +76,7 @@ FirstFollowNode* Fl;
 
 int* currentIndex;
 int ** RHSRuleIndices;
-
+int** ParseTable;
 
 // struct firstAndFollow{
 // 	First f;
