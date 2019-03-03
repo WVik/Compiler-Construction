@@ -6,17 +6,49 @@
 
 void initializeParser(FILE* fp)
 {
-	getGrammar(fp);
 	
+ 
+	RHSRuleIndices = (int**)malloc(numNonTerminals*sizeof(int*));
+  currentIndex = (int*)malloc(sizeof(int)*numNonTerminals);
+
+  for(int i=0;i<numNonTerminals;i++)
+    currentIndex[i] = 0;
+
+  for(int i=0;i<numNonTerminals;i++)
+      {
+        RHSRuleIndices[i] = (int*)malloc(sizeof(int)*maxRHSIndices);
+        for(int j=0;j<maxRHSIndices;j++)
+          RHSRuleIndices[i][j] = -1;
+      }
+
   for(int i=0;i<numNonTerminals;i++)
     visited[i] = 0;
+
+
+
+   getGrammar(fp);
+
 	//tableParseTable = (int**)malloc(sizeof(int*)*numNonTerminals);
 	//for(int i=0;i<numNonTerminals;i++)
 		//tableParseTable[i] = (int*)malloc(sizeof(int)*numTerminals);
 	//table ParseTable = createParseTable(g);
+
   Ft = (FirstFollowNode*)malloc(numNonTerminals*sizeof(FirstFollowNode));
   for(int i=0;i<numNonTerminals;i++)
     Ft->head = NULL;
+
+  Fl = (FirstFollowNode*)malloc(numNonTerminals*sizeof(FirstFollowNode));
+  for(int i=0;i<numNonTerminals;i++)
+    Fl->head = NULL;
+
+  RhsNode dollar = (RhsNode)malloc(sizeof(struct rhsNode));
+  (dollar->term).t = $;
+  dollar->next = NULL;
+  dollar->id = terminal;
+
+  push(Fl,0,dollar);
+
+
 
   ComputeFirstAndFollow();
 }
@@ -49,9 +81,9 @@ int containsNullProd(int i)
 //     if(strcmp())
 // }
 
-void printFirst(int i){
+void printFirstFollow(FirstFollowNode * list, int i){
   printf("%s: ", nonTerminalString[i]);
-  RhsNode temp = Ft[i].head;
+  RhsNode temp = list[i].head;
   while(temp!=NULL)
   {
     printf("%s ",TerminalString[(temp->term).nt]);
@@ -63,12 +95,107 @@ void printFirst(int i){
 void ComputeFirstAndFollow()
 {
 	for(int i=0;i<numNonTerminals;i++)
-		{if(visited[i]==0)
-			{computeFirst(i);}
+		{
+      if(visited[i]==0)
+			   computeFirst(i);
+       //printFirstFollow(Ft,i);
+    }
+  
+
+  
+  //Reset Visited rules for Follow
+  for(int i=0;i<numNonTerminals;i++)
+    visited[i] = 0;  
+
+
+  for(int i=0;i<numNonTerminals;i++)
+  {  if(visited[i]==0)
+        computeFollow(i);
+      printFirstFollow(Fl,i);
+  }
+      
+  //}
+}
+
+
+
+void computeFollow(int nonTerm)
+{
+    if(visited[nonTerm]==1)
+      return;
+
+    visited[nonTerm] = 1;
+    for(int i=0;i<currentIndex[nonTerm];i++)
+    {
+        computeFollowHelper(RHSRuleIndices[nonTerm][i], nonTerm);
+    }
+
+}
+
+
+void computeFollowHelper(int RuleNum, int nonTerm)
+{
+  RhsNode temp = g[RuleNum]->head;
+  
+  //Flag to check if we encountered the nonterminal yet
+  int sameNonTerm = 0;
+
+  while(temp!=NULL)
+  {
     
 
-    //printFirst(i);
+    if(sameNonTerm == 1)
+    {
+      //Encounter a Terminal
+      if(temp->id == terminal)
+        {
+          push(Fl,nonTerm,temp);
+          sameNonTerm = 0;
+          temp = temp->next;
+          continue;
+        }
+      
+      //If it is a non terminal, merge the first of temp->term
+      merge(Fl,Ft,nonTerm,(temp->term).nt,0);
+      
+      //If this nonterminal doesn't go to eps, reset the flag
+      if(!containsNullProd((temp->term).nt))
+        sameNonTerm = 0;
+
+    }
+    else if(temp->id == terminal || (temp->id == nonterminal && nonTerm != (temp->term).nt))
+    {
+      temp = temp->next;
+      continue;
+    }
+
+    if(temp->id == nonterminal && nonTerm == (temp->term).nt)
+      sameNonTerm = 1;
+
+
+
+    /*Recursive follow case:
+        1) The last nonterminal goes to eps
+        2) The last nonterminal is the one whose follow is to be computed
+    */
+    if(temp->next == NULL && ((sameNonTerm==1) || (nonTerm == (temp->term).nt && temp->id == nonterminal)))
+      {
+        
+        //If follow isn't computed yet
+        if(Fl[g[RuleNum]->lhs].head == NULL)
+          computeFollow(g[RuleNum]->lhs);
+
+        merge(Fl,Fl,nonTerm,g[RuleNum]->lhs,0);
+        return;
+      }
+
+    //We encountered the non-terminal whose follow is to be computed
+    
+    //sameNonTerm = 1;
+
+    temp = temp->next;
   }
+
 }
 
 
@@ -92,7 +219,7 @@ void computeFirst(int nonTerm)
   		
       if(rhs->id == terminal)
   			{
-          push(nonTerm,((rhs->term).nt));
+          push(Ft,nonTerm,rhs);
           TermFlag = 1;     
           break;       
         }
@@ -104,7 +231,7 @@ void computeFirst(int nonTerm)
           int epsFlag = 0;
           if(rhs->next == NULL)
             epsFlag = 1;
-  				merge(nonTerm,(rhs->term).nt,epsFlag);
+  				merge(Ft,Ft,nonTerm,(rhs->term).nt,epsFlag);
 
   				if(!containsNullProd((rhs->term).nt))
   					break;
@@ -120,59 +247,69 @@ void computeFirst(int nonTerm)
 
 
 
-void push(int nonTerm,int t)
+void push(FirstFollowNode* list, int nonTerm,RhsNode t)
 {
 	
-	if(Ft[nonTerm].head == NULL)
+	if(list[nonTerm].head == NULL)
 	{
-		Ft[nonTerm].head = (RhsNode)malloc(sizeof(struct rhsNode));
-		(Ft[nonTerm].head->term).nt = t;
-		Ft[nonTerm].head->id = terminal;
-    Ft[nonTerm].head->next = NULL;
+		list[nonTerm].head = (RhsNode)malloc(sizeof(struct rhsNode));
+		(list[nonTerm].head->term).nt = (t->term).nt;
+		list[nonTerm].head->id = terminal;
+    list[nonTerm].head->next = NULL;
 		return;
 	}
 
-	RhsNode temp = Ft[nonTerm].head;
+	RhsNode temp = list[nonTerm].head;
 	
-  if((temp->term).nt == t)
+  if((temp->term).nt == (t->term).nt)
       return; 
 
 	while(temp->next != NULL)
-	{
-		if((temp->term).nt == t)
-			return;
-		
+	{		
 		temp = temp->next;
+    if((temp->term).nt == (t->term).nt)
+      return;
 	}
 	temp->next = (RhsNode)malloc(sizeof(struct rhsNode));
-	(temp->next->term).nt = t;
+	(temp->next->term).nt = (t->term).nt;
 	temp->id = terminal;
   temp->next->next = NULL;
 }
 
 
-void merge(int nonTerm, int t, int epsFlag)
+
+
+
+
+void merge(FirstFollowNode* insertInto, FirstFollowNode* insertFrom, int nonTerm, int t, int epsFlag)
 {
 	
-  RhsNode temp = Ft[t].head;
+  RhsNode temp = insertFrom[t].head;
 	while(temp!=NULL)
 		{
 			if(epsFlag == 0 && (temp->term).t==eps)
         {temp = temp->next;continue;}
 
-      push(nonTerm,(temp->term).nt);
+      push(insertInto,nonTerm,temp);
 			temp = temp->next;
 		}
 }
 
-/*void printFirst()
-{
-	for(int i=0;i<numNonTerminals;i++)
-	{
-		print("%s",)
-	}
-}
-*/
+
+// void merge(int nonTerm, int t, int epsFlag)
+// {
+  
+//   RhsNode temp = Ft[t].head;
+//   while(temp!=NULL)
+//     {
+//       if(epsFlag == 0 && (temp->term).t==eps)
+//         {temp = temp->next;continue;}
+
+//       push(Ft,nonTerm,temp);
+//       temp = temp->next;
+//     }
+// }
+
 
 
 int parseWithSpaces(char* string, char** parsed) 
@@ -267,6 +404,9 @@ void getGrammar(FILE* fp)
 
    					//printf(" %s",parsed[i]);
    					int ind = getIndexNonTerminal(parsed[i]);
+            
+            
+            
 
    					//printf("Index = %d ", ind);
 
@@ -279,28 +419,32 @@ void getGrammar(FILE* fp)
    					{
    						// RHS
    						RhsNode r = (RhsNode)malloc(sizeof(struct rhsNode));
-    						RhsNode temp = g[ruleIndex]->head;
+    					RhsNode temp = g[ruleIndex]->head;
 
-    						if(temp == NULL){
-      							g[ruleIndex]->head = r;
-      						  (r->term).nt = ind;
-        				    r->id = nonterminal;
-        				    r->next = NULL; 
-    						}
-    						else
-    						{
-        						while(temp->next != NULL)
-        							 temp = temp->next;
+              //For follow computation
+              RHSRuleIndices[ind][currentIndex[ind]] = ruleIndex;
+              currentIndex[ind]++;
 
-        						temp->next = r;
-      						  (r->term).nt = ind;
-    	  				    r->id = nonterminal;
-    	  				    r->next = NULL;
+  						if(temp == NULL){
+    							g[ruleIndex]->head = r;
+    						  (r->term).nt = ind;
+      				    r->id = nonterminal;
+      				    r->next = NULL; 
+  						}
+  						else
+  						{
+      						while(temp->next != NULL)
+      							 temp = temp->next;
 
-  	  				    }
-   					}
+      						temp->next = r;
+    						  (r->term).nt = ind;
+  	  				    r->id = nonterminal;
+  	  				    r->next = NULL;
 
-   				}
+	  				    }
+   					  }
+
+   				 }
    				else
    				{
    					// case of Terminal
