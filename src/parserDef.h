@@ -1,88 +1,121 @@
-#include<stdio.h>
+/*
+	Group - 5
+	Vikram Waradpande - 2015B4A70454P
+	Rinkesh Jain - 2015B4A70590P
+	Yajat Dawar - 2015B4A70620P
+	Anmol Naugaria - 2015B4A70835P
+*/
+
+#ifndef _PARSERDEFINITIONS_
+#define _PARSERDEFINITIONS_
+
+#include "lexerDef.h"
+
+#include <stdio.h>
+#include <stdlib.h>
 
 # define MAX 500
 # define numNonTerminals 51
-# define numTerminals 55
+# define numTerminals 56
 # define MAX 500
 # define numRules 92
 # define maxRHSIndices 10
-# define SYNCH -2;
+# define SYNCH -2
 
 
-typedef enum nonTerminal {program,mainFunction,otherFunctions,function,input_par,output_par,parameter_list,dataType,primitiveDatatype,
-constructedDatatype,remaining_list,stmts,typeDefinitions,typeDefinition,fieldDefinitions,fieldDefinition,moreFields,
-declarations,declaration,global_or_not,otherStmts,stmt,assignmentStmt,singleOrRecId,new_24,funCallStmt,outputParameters,
-inputParameters,iterativeStmt,conditionalStmt,elsePart,ioStmt,allVar,arithmeticExpression,expPrime,term,termPrime,
-factor,highPrecedenceOperators,lowPrecedenceOperators,all,temp,booleanExpression,var,logicalOp,relationalOp,returnStmt,
-optionalReturn,idList,more_ids,allVarDash} NonTerminal;
-
-//enum for terminals
-// Union Name should be Term
-
-typedef enum terminal {TK_ASSIGNOP,TK_COMMENT,TK_FIELDID,TK_ID,TK_NUM,TK_RNUM,TK_FUNID,TK_RECORDID,TK_WITH,
-TK_PARAMETERS,TK_END,TK_WHILE,TK_TYPE,TK_MAIN,TK_GLOBAL,TK_PARAMETER,TK_LIST,TK_SQL,TK_SQR,TK_INPUT,
-TK_OUTPUT,TK_INT,TK_REAL,TK_COMMA,TK_SEM,TK_COLON,TK_DOT,TK_ENDWHILE,TK_OP,TK_CL,TK_IF,TK_THEN,
-TK_ENDIF,TK_READ,TK_WRITE,TK_RETURN,TK_PLUS,TK_MINUS,TK_MUL,TK_DIV,TK_CALL,TK_RECORD,TK_ENDRECORD,
-TK_ELSE,TK_AND,TK_OR,TK_NOT,TK_LT,TK_LE,TK_EQ,TK_GT,TK_GE,TK_NE,eps,$} Terminal;
-
-typedef enum termOrNonTerm {nonterminal,terminal} TermOrNonTerm;
-
-
-char* nonTerminalString[] = {"program","mainFunction","otherFunctions","function","input_par","output_par","parameter_list","dataType","primitiveDatatype",
-"constructedDatatype","remaining_list","stmts","typeDefinitions","typeDefinition","fieldDefinitions","fieldDefinition","moreFields",
-"declarations","declaration","global_or_not","otherStmts","stmt","assignmentStmt","singleOrRecId","new_24","funCallStmt","outputParameters",
-"inputParameters","iterativeStmt","conditionalStmt","elsePart","ioStmt","allVar","arithmeticExpression","expPrime","term","termPrime",
-"factor","highPrecedenceOperators","lowPrecedenceOperators","all","temp","booleanExpression","var","logicalOp","relationalOp","returnStmt",
-"optionalReturn","idList","more_ids","allVarDash"};
-
-char* TerminalString[] = {"TK_ASSIGNOP","TK_COMMENT","TK_FIELDID","TK_ID","TK_NUM","TK_RNUM","TK_FUNID","TK_RECORDID","TK_WITH",
-"TK_PARAMETERS","TK_END","TK_WHILE","TK_TYPE","TK_MAIN","TK_GLOBAL","TK_PARAMETER","TK_LIST","TK_SQL","TK_SQR","TK_INPUT",
-"TK_OUTPUT","TK_INT","TK_REAL","TK_COMMA","TK_SEM","TK_COLON","TK_DOT","TK_ENDWHILE","TK_OP","TK_CL","TK_IF","TK_THEN",
-"TK_ENDIF","TK_READ","TK_WRITE","TK_RETURN","TK_PLUS","TK_MINUS","TK_MUL","TK_DIV","TK_CALL","TK_RECORD","TK_ENDRECORD",
-"TK_ELSE","TK_AND","TK_OR","TK_NOT","TK_LT","TK_LE","TK_EQ","TK_GT","TK_GE","TK_NE","eps","$"};
-
+// A union for terminal and non terminal type tokens
 typedef union term {
 	NonTerminal nt;
 	Terminal t;
 }Term;
 
 
+//Structure to represent a grammar rule's symbol
 struct rhsNode{
 	Term term;
-	TermOrNonTerm id; 
+	TermOrNonTerm id;
+	Terminal t;
+	NonTerminal nt;
 	struct rhsNode* next;
 };
-
 typedef struct rhsNode* RhsNode;
 
 
+//Structure to represent a production rule of a grammar
 struct production{
 	NonTerminal lhs;
 	RhsNode head;
 };
-
 typedef struct production* Production;
+
+//Grammar is an array of productions
 typedef Production* Grammar;
+
+//Global Variable to represent the grammar
 Grammar g;
 
+
+//Structure to represent a first and follow node
 struct firstFollowNode{
 	RhsNode head;
 };
-
 typedef struct firstFollowNode FirstFollowNode;
 
+
+//Global variables to represent first and follow
 FirstFollowNode* Ft;
 FirstFollowNode* Fl;
+
+
+struct leafNode;
+struct treeNode;
 
 int* currentIndex;
 int ** RHSRuleIndices;
 int** ParseTable;
+typedef struct leafNode* LeafNode;
+typedef struct treeNode* TreeNode;
 
-// struct firstAndFollow{
-// 	First f;
-// };
 
-// typedef struct firstAndFollow* FirstAndFollow;
 
-// FirstAndFollow FF;
+struct treeNode
+{
+	TermOrNonTerm id;
+	NonTerminal nt;
+	Terminal t;
+	TreeNode children;
+	TreeNode next;
+	TokenInfo leafInfo;
+	int ruleNum;
+	struct treeNode *inh, *syn;
+};
 
+typedef struct treeNode* TreeNode;
+
+
+
+//Structure to represent a stack node
+struct stackNode
+{
+	struct stackNode* next;
+	TermOrNonTerm id;
+	TreeNode tn;
+};
+typedef struct stackNode* StackNode;
+
+
+//Strucrure to represent a stack
+struct stack{
+	StackNode top;
+};
+typedef struct stack* Stack;
+
+//Global variables to represent a buffer and global stack
+Stack globalStack;
+Stack bufferStack;
+
+//Global variable for
+TreeNode root;
+
+
+#endif

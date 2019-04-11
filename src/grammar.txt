@@ -7,7 +7,7 @@
 <output_par> - TK_OUTPUT TK_PARAMETER TK_LIST TK_SQL <parameter_list> TK_SQR
 <output_par> - eps
 <parameter_list> - <dataType> TK_ID <remaining_list>
-<dataType> - <primitiveDatatype> 
+<dataType> - <primitiveDatatype>
 <dataType> - <constructedDatatype>
 <primitiveDatatype> - TK_INT
 <primitiveDatatype> - TK_REAL
@@ -43,14 +43,14 @@
 <outputParameters> - eps
 <inputParameters> - TK_SQL <idList> TK_SQR
 <iterativeStmt> - TK_WHILE TK_OP <booleanExpression> TK_CL <stmt> <otherStmts> TK_ENDWHILE
-<conditionalStmt> - TK_IF TK_OP <booleanExpression> TK_CL TK_THEN <stmt> <otherStmts> <elsePart> 
+<conditionalStmt> - TK_IF TK_OP <booleanExpression> TK_CL TK_THEN <stmt> <otherStmts> <elsePart>
 <elsePart> - TK_ELSE <stmt> <otherStmts> TK_ENDIF
-<elsePart> - TK_ENDIF 
+<elsePart> - TK_ENDIF
 <ioStmt> - TK_READ TK_OP <singleOrRecId> TK_CL TK_SEM
 <ioStmt> - TK_WRITE TK_OP <allVar> TK_CL TK_SEM
 <allVar> - TK_ID <allVarDash>
 <allVar> - TK_NUM
-<allVar> - TK_RNUM 
+<allVar> - TK_RNUM
 <allVarDash> - TK_DOT TK_FIELDID
 <allVarDash> - eps
 <arithmeticExpression> - <term> <expPrime>
@@ -62,7 +62,7 @@
 <factor> - TK_OP <arithmeticExpression> TK_CL
 <factor> - <all>
 <highPrecedenceOperators> - TK_MUL
-<highPrecedenceOperators> - TK_DIV 
+<highPrecedenceOperators> - TK_DIV
 <lowPrecedenceOperators> - TK_PLUS
 <lowPrecedenceOperators> - TK_MINUS
 <all> - TK_ID <temp>
