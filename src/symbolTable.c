@@ -11,6 +11,14 @@
   Pass 3: Handle param lists, definitions and calculate attributes
 */
 
+int getFunctionIndex(char* funcName)
+{
+  for(int i=0;i<currFuncIndex;i++)
+    if(strcmp(funcName,functionTable[i]->funcName) == 0)
+      return i;
+  return -1;
+}
+
 void initializeSymbolTableVariables()
 {
   currFuncIndex = 0;
@@ -123,8 +131,6 @@ void populateRecordDefs(TreeNode root)
 
     if(root->nt == typeDefinitions)
     {
-
-
 
       TreeNode recIDNode = root->children;
       while(recIDNode!=NULL)

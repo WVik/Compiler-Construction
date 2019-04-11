@@ -36,6 +36,7 @@ char* TString[] = {"TK_ASSIGNOP","TK_COMMENT","TK_FIELDID","TK_ID","TK_NUM","TK_
 #include "lexer.h"
 #include "parser.h"
 #include "symbolTable.h"
+#include "typeChecker.h"
 
 
 int option = -1;
@@ -130,9 +131,13 @@ int main(int argc, char* argv[])
 
 			initializeSymbolTableVariables();
 			populateSymbolTable(root);
+
+			checkFunctionSemantics(root->children->next,1);
+
       //printf("Parsing successful: Program is syntactically correct.");
       printf("Printing Parse Tree: \n\n");
     //  printParseTree(root,argv[2]);
+
 
       printf("Pretty printing parse tree\n");
       prettyPrintParseTree(root,0);

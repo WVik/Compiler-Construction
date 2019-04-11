@@ -38,5 +38,6 @@ int checkVariableRedefinition(int funcIndex,char* string);
 int checkGlobalRedeclaration(char* string);
 void reallocateSymbolTable(int currentFunctionIndex);
 void reallocateRecordTable();
+int getFunctionIndex(char* funcName);
 
 #endif
