@@ -595,7 +595,7 @@ void createAST(TreeNode root)
       TreeNode st = root->children->next->next->next->next;
       TreeNode ost = st->next;
 
-      free(root->children->next->next->next->next->next->next);
+      TreeNode endwhileNode = root->children->next->next->next->next->next->next;
       free(root->children->next->next->next);
       free(root->children->next);
       free(root->children);
@@ -603,6 +603,11 @@ void createAST(TreeNode root)
       root->children = be;
       be->next = st->children;
       st->children->next = ost->children;
+
+      TreeNode temp = st->children;
+      while(temp->next!=NULL)
+        temp = temp->next;
+      temp->next = endwhileNode;
       free(st);
       free(ost);
       break;

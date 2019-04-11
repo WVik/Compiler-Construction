@@ -25,6 +25,7 @@ struct funcTable{
   SymTableEntry symTable;
   int currIndex;
   int callFlag;
+  TreeNode ASTNode;
 };
 typedef struct funcTable* FuncTable;
 

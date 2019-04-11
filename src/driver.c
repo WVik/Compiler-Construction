@@ -132,7 +132,9 @@ int main(int argc, char* argv[])
 			initializeSymbolTableVariables();
 			populateSymbolTable(root);
 
+			checkFunctionSemantics(root->children,0);
 			checkFunctionSemantics(root->children->next,1);
+			checkFunctionSemantics(root->children->next->next,2);
 
       //printf("Parsing successful: Program is syntactically correct.");
       printf("Printing Parse Tree: \n\n");

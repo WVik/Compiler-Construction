@@ -104,6 +104,7 @@ void populateRecordDefs(TreeNode root)
       strcpy(functionName,root->children->leafInfo->lexeme);
     else
       strcpy(functionName,"_main");
+
     for(int i=0;i<currFuncIndex;i++)
     {
       if(strcmp(functionTable[i]->funcName,functionName) == 0)
@@ -116,6 +117,7 @@ void populateRecordDefs(TreeNode root)
     allocateSymbolTable();
 
     functionTable[currFuncIndex]->funcName = (char*)malloc(sizeof(char)*31);
+    functionTable[currFuncIndex]->ASTNode = root;
     strcpy(functionTable[currFuncIndex]->funcName,functionName);
 
     if(root->nt != mainFunction)
@@ -372,9 +374,10 @@ void populateDeclarations(TreeNode root,int currentFunctionIndex)
               functionTable[currentFunctionIndex]->symTable[symTableIndex].symName = (char*)malloc(sizeof(char)*21);
               strcpy(functionTable[currentFunctionIndex]->symTable[symTableIndex].symName,root->next->leafInfo->lexeme);
               symTableIndex++;
-
+              functionTable[currentFunctionIndex]->currIndex++;
           }
           root = root->next->next->next;
+
       }
   }
   functionTable[currentFunctionIndex]->currIndex = symTableIndex;
@@ -399,6 +402,7 @@ void allocateSymbolTable()
       functionTable[i]->currIndex = 0;
       functionTable[i]->tableSize = 0;
       functionTable[i]->callFlag = 0;
+      functionTable[i]->ASTNode = NULL;
     }
     numFunctions*=2;
   }
@@ -444,6 +448,7 @@ void handleInputPar(TreeNode root,int currentFunctionIndex)
       {
         printf("Variable %s already declared as a global at line %d\n",varNameNode->leafInfo->lexeme,varNameNode->leafInfo->lineNumber);
         functionTable[currentFunctionIndex]->symTable[numParams].type = -1;
+        functionTable[currentFunctionIndex]->symTable[numParams].width = 0;
         functionTable[currentFunctionIndex]->inputParType[numParams] = -1;
         functionTable[currentFunctionIndex]->symTable[numParams].symName = (char*)malloc(sizeof(char)*21);
         strcpy(functionTable[currentFunctionIndex]->symTable[numParams].symName,temp->next->leafInfo->lexeme);
@@ -459,6 +464,7 @@ void handleInputPar(TreeNode root,int currentFunctionIndex)
           {
               printf("ERROR: Record %s not defined at line %d\n",temp->leafInfo->lexeme,temp->leafInfo->lineNumber);
               functionTable[currentFunctionIndex]->symTable[numParams].type = -1;
+              functionTable[currentFunctionIndex]->symTable[numParams].width = 0;
               functionTable[currentFunctionIndex]->inputParType[numParams] = -1;
               functionTable[currentFunctionIndex]->symTable[numParams].symName = (char*)malloc(sizeof(char)*21);
               strcpy(functionTable[currentFunctionIndex]->symTable[numParams].symName,temp->next->leafInfo->lexeme);
@@ -470,16 +476,19 @@ void handleInputPar(TreeNode root,int currentFunctionIndex)
 
           functionTable[currentFunctionIndex]->inputParType[numParams] = getRecordIndex(temp->leafInfo->lexeme)+2;
           functionTable[currentFunctionIndex]->symTable[numParams].type = getRecordIndex(temp->leafInfo->lexeme)+2;
+          functionTable[currentFunctionIndex]->symTable[numParams].width = recordTable[getRecordIndex(temp->leafInfo->lexeme)].recordWidth;
         }
 
       if(temp->t == TK_INT)
         {
           functionTable[currentFunctionIndex]->symTable[numParams].type = INT;
+          functionTable[currentFunctionIndex]->symTable[numParams].width = INT_WIDTH;
           functionTable[currentFunctionIndex]->inputParType[numParams] = INT;
         }
       else if(temp->t == TK_REAL)
         {
           functionTable[currentFunctionIndex]->symTable[numParams].type = REAL;
+          functionTable[currentFunctionIndex]->symTable[numParams].width = REAL_WIDTH;
           functionTable[currentFunctionIndex]->inputParType[numParams] = REAL;
         }
 
@@ -529,6 +538,7 @@ void handleOutputPar(TreeNode root,int currentFunctionIndex)
     {
       printf("Variable %s already declared as a global at line %d\n",varNameNode->leafInfo->lexeme,varNameNode->leafInfo->lineNumber);
       functionTable[currentFunctionIndex]->symTable[numParams].type = -1;
+      functionTable[currentFunctionIndex]->symTable[numParams].width = 0;
       functionTable[currentFunctionIndex]->outputParType[numParams-prevParams] = -1;
       functionTable[currentFunctionIndex]->symTable[numParams].symName = (char*)malloc(sizeof(char)*21);
       strcpy(functionTable[currentFunctionIndex]->symTable[numParams].symName,temp->next->leafInfo->lexeme);
@@ -544,6 +554,7 @@ void handleOutputPar(TreeNode root,int currentFunctionIndex)
         {
             printf("ERROR: Record %s not defined at line %d\n",temp->leafInfo->lexeme,temp->leafInfo->lineNumber);
             functionTable[currentFunctionIndex]->symTable[numParams].type = -1;
+            functionTable[currentFunctionIndex]->symTable[numParams].width = 0;
             functionTable[currentFunctionIndex]->outputParType[numParams-prevParams] = -1;
             functionTable[currentFunctionIndex]->symTable[numParams].symName = (char*)malloc(sizeof(char)*21);
             strcpy(functionTable[currentFunctionIndex]->symTable[numParams].symName,temp->next->leafInfo->lexeme);
@@ -555,16 +566,19 @@ void handleOutputPar(TreeNode root,int currentFunctionIndex)
 
         functionTable[currentFunctionIndex]->outputParType[numParams-prevParams] = getRecordIndex(temp->leafInfo->lexeme)+2;
         functionTable[currentFunctionIndex]->symTable[numParams].type = getRecordIndex(temp->leafInfo->lexeme)+2;
+        functionTable[currentFunctionIndex]->symTable[numParams].width = recordTable[getRecordIndex(temp->leafInfo->lexeme)].recordWidth;
       }
 
     if(temp->t == TK_INT)
       {
         functionTable[currentFunctionIndex]->symTable[numParams].type = INT;
+        functionTable[currentFunctionIndex]->symTable[numParams].width = INT_WIDTH;
         functionTable[currentFunctionIndex]->outputParType[numParams-prevParams] = INT;
       }
     else if(temp->t == TK_REAL)
       {
         functionTable[currentFunctionIndex]->symTable[numParams].type = REAL;
+        functionTable[currentFunctionIndex]->symTable[numParams].width = REAL_WIDTH;
         functionTable[currentFunctionIndex]->outputParType[numParams-prevParams] = REAL;
       }
 

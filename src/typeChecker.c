@@ -27,6 +27,10 @@ int getVarIndex(int funcIndex,char* string)
 
 int getType(int functionIndex,TreeNode root)
 {
+  if(root->t == TK_NUM)
+    return 0;
+  if(root->t==TK_RNUM)
+    return 1;
   int symIndex = getVarIndex(functionIndex,root->leafInfo->lexeme);
   int globalIndex = getGlobalIndex(root->leafInfo->lexeme);
 
@@ -35,7 +39,7 @@ int getType(int functionIndex,TreeNode root)
   else if(globalIndex!=-1)
     return globalTable[globalIndex].type;
 
-  printf("ERROR: Variable %s not declared before use at line %d",root->leafInfo->lexeme,root->leafInfo->lineNumber);
+  printf("ERROR: Variable %s not declared before use at line %d\n",root->leafInfo->lexeme,root->leafInfo->lineNumber);
   return -1;
 }
 
@@ -58,16 +62,17 @@ void checkFunctionSemantics(TreeNode root, int functionIndex)
   else
     root = root->children->next;
 
-  while(root->nt != assignmentStmt)
-  {
-      root = root->next;
-      if(root==NULL)
-        return;
-  }
-  if(root == NULL)
-    return;
+  if(root->nt == input_par)
+    root = root->next;
+  if(root->nt == output_par)
+    root = root->next;
+  if(root->nt == typeDefinitions)
+    root = root->next;
+  if(root->nt == declarations)
+    root = root->next;
 
-  checkAssignmentStatement(root,functionIndex);
+  checkStatementSemantics(root,functionIndex);
+
 }
 
 
@@ -85,7 +90,12 @@ void checkAssignmentStatement(TreeNode root, int functionIndex)
         lhsType = getType(functionIndex,lhs);
       }
     else{
-      int recIndex = getRecordIndex(lhs->leafInfo->lexeme);
+      int type = getType(functionIndex,lhs);
+      if(type==-1)
+      {
+        return;
+      }
+      int recIndex = type-2;
       for(int i=0;i<recordTable[recIndex].numFields;i++)
         if(strcmp(recordTable[recIndex].recordFields[i].symName,lhs->next->leafInfo->lexeme) == 0)
           lhsType = recordTable[recIndex].recordFields[i].type;
@@ -171,14 +181,42 @@ int evalArithmeticExpressionType(TreeNode root,int functionIndex)
           int leftType = evalArithmeticExpressionType(root->children,functionIndex);
           int rightType = evalArithmeticExpressionType(root->children->next,functionIndex);
 
+          if(leftType == -1 || rightType == -1)
+          {
+            return -1;
+          }
+
           if(leftType == rightType && (leftType == 0 || leftType == 1))
             return leftType;
 
-          if(leftType == rightType && leftType >= 2)
+          if(root->t == TK_MUL)
+          {
+            if(leftType>=2 && rightType<2)
+              return leftType;
+
+            if(rightType>=2 && leftType<2)
+              return rightType;
+
+            if(rightType+leftType >= 4)
+              {
+                printf("Line %d: Records can't be multipled\n",root->leafInfo->lineNumber);
+              }
+
+            return -1;
+          }
+
+          if(root->t == TK_DIV)
+          {
+            if(leftType>=2 && rightType<2)
+              return leftType;
+            if(rightType>=2)
             {
-              printf("ERROR: Records can't be multiplied or divided at line number %d\n",root->leafInfo->lineNumber);
-              return -1;
+              printf("Line %d: Cannot divide by a record\n",root->leafInfo->lineNumber);
             }
+            return -1;
+          }
+
+
 
           return -1;
 
@@ -207,6 +245,7 @@ int evalArithmeticExpressionType(TreeNode root,int functionIndex)
     printf("ERROR: Record %s has no field named %s at line %d\n",recordTable[recordIndex].recordName, root->children->next->leafInfo->lexeme, root->children->next->leafInfo->lineNumber);
     return -1;
   }
+  return -1;
 
 }
 
@@ -270,12 +309,12 @@ void checkFunctionCallSemantics(TreeNode root, int functionIndex)
     int formalType = functionTable[calleeIndex]->inputParType[i];
     if(actualType == -1)
     {
-      printf("Line %d: Invalid variable %s\n", temp->leafInfo->lineNumber, temp->leafInfo->lexeme);
-      return;
+      //printf("Line %d: Invalid variable %s\n", temp->leafInfo->lineNumber, temp->leafInfo->lexeme);
+      break;
     }
     //If formalType is -1, it means the error was already declared
     if(formalType == -1)
-      return;
+      break;
 
     if(formalType!=actualType)
     {
@@ -292,7 +331,7 @@ void checkFunctionCallSemantics(TreeNode root, int functionIndex)
    int formalType = functionTable[calleeIndex]->outputParType[i];
    if(actualType == -1)
    {
-     printf("Line %d: Invalid variable %s\n", temp->leafInfo->lineNumber, temp->leafInfo->lexeme);
+     //printf("Line %d: Invalid variable %s\n", temp->leafInfo->lineNumber, temp->leafInfo->lexeme);
      return;
    }
    //If formalType is -1, it means the error was already declared
@@ -308,4 +347,148 @@ void checkFunctionCallSemantics(TreeNode root, int functionIndex)
  }
 
 
+}
+
+
+void checkBooleanSemantics(TreeNode root,int functionIndex)
+{
+  if(root->t == TK_LT || root->t == TK_LE || root->t == TK_EQ || root->t == TK_GT || root->t == TK_GE || root->t == TK_NE)
+  {
+    int lhsType = getType(functionIndex,root->children);
+    int rhsType = getType(functionIndex,root->children->next);
+    if(lhsType == -1 || rhsType == -1)
+      return;
+    else if(lhsType == rhsType)
+      return;
+    else
+    {
+      printf("Line %d : ERROR Type Mismatch -> Comparison of %s of type %s with %s of type %s\n",root->children->leafInfo->lineNumber,root->children->leafInfo->lexeme,getTypeString(lhsType),root->children->next->leafInfo->lexeme,getTypeString(rhsType));
+      return;
+    }
+  }
+  if(root->t == TK_AND || root->t == TK_OR)
+  {
+    checkBooleanSemantics(root->children,functionIndex);
+    checkBooleanSemantics(root->children->next,functionIndex);
+  }
+  if(root->t == TK_NOT)
+  {
+    checkBooleanSemantics(root->children,functionIndex);
+  }
+
+}
+
+void checkIterativeStatementSemantics(TreeNode root,int functionIndex)
+{
+  int startLine = root->children->children->leafInfo->lineNumber;
+  int endLine = 0;
+  TreeNode stmtNode = root->children->next;
+  while(stmtNode->id!=terminal)
+  {
+    stmtNode = stmtNode->next;
+  }
+  endLine = stmtNode->leafInfo->lineNumber;
+  if(isValidWhile(root->children->children,root->children->next) == 0)
+    printf("Line %d-%d None of the variables participating in the iterations of the while loop gets updated \n",startLine,endLine);
+  checkBooleanSemantics(root->children->children,functionIndex);
+  checkStatementSemantics(root->children->next,functionIndex);
+}
+
+
+int checkIfVarUpdated(char* name,TreeNode stmtNode)
+{
+  while(stmtNode!=NULL)
+  {
+    if(stmtNode->nt == assignmentStmt)
+      if(strcmp(stmtNode->children->leafInfo->lexeme,name)==0)
+        return 1;
+    if(stmtNode->nt == ioStmt)
+      if(stmtNode->children->t == TK_READ)
+        if(strcmp(stmtNode->children->next->leafInfo->lexeme,name)==0)
+          return 1;
+    stmtNode = stmtNode->next;
+  }
+  return 0;
+}
+
+
+int isValidWhile(TreeNode root,TreeNode stmtNode)
+{
+  if(root->t == TK_AND || root->t==TK_OR)
+    return isValidWhile(root->children,stmtNode) || isValidWhile(root->children->next,stmtNode);
+  if(root->t == TK_LT || root->t == TK_LE || root->t == TK_EQ || root->t == TK_GT || root->t == TK_GE || root->t == TK_NE)
+    return isValidWhile(root->children,stmtNode) || isValidWhile(root->children->next,stmtNode);
+  if(root->t == TK_NOT)
+    return isValidWhile(root->children,stmtNode);
+  if(root->t == TK_NUM || root->t == TK_RNUM)
+    return 0;
+  if(root->t == TK_ID)
+    return checkIfVarUpdated(root->leafInfo->lexeme,stmtNode);
+  return 0;
+}
+
+void checkConditionalStatementSemantics(TreeNode root,int functionIndex)
+{
+  checkBooleanSemantics(root->children->children,functionIndex);
+  if(root->children->next->nt ==elsePart)
+  {
+    checkStatementSemantics(root->children->next->children,functionIndex);
+    checkStatementSemantics(root->children->next->next,functionIndex);
+    return;
+  }
+  checkStatementSemantics(root->children->next,functionIndex);
+}
+
+
+// void checkReturnSemantics(TreeNode root,functionIndex)
+// {
+//   temp = root->children;
+//   int numOutputParams = functionTable[functionIndex]->numOutputParams;
+//
+//   for(int i=0;i<numOutputParams;i++)
+//   {
+//     int actualType = getType(functionIndex, temp);
+//
+//     int formalType = functionTable[functionIndex]->outputParType[i];
+//     if(actualType == -1)
+//     {
+//       printf("Line %d: Invalid variable %s\n", temp->leafInfo->lineNumber, temp->leafInfo->lexeme);
+//       return;
+//     }
+//     //If formalType is -1, it means the error was already declared
+//     if(formalType == -1)
+//       return;
+//
+//     if(formalType!=actualType)
+//     {
+//       printf("Line %d: Function type mismatch. Parameter number %d is expected to be of type %s\n",temp->leafInfo->lineNumber,i+1,getTypeString(formalType));
+//     }
+//
+//     temp = temp->next;
+//   }
+// }
+
+
+void checkStatementSemantics(TreeNode root,int functionIndex)
+{
+  while(root!=NULL || (root->id == terminal && root->t == TK_ENDWHILE))
+  {
+    // if(root->nt == ioStmt)
+    //   checkIOStatementSemantics(root,functionIndex);
+    if(root->nt == assignmentStmt)
+      checkAssignmentStatement(root,functionIndex);
+    else if(root->nt == conditionalStmt)
+      checkConditionalStatementSemantics(root,functionIndex);
+    else if(root->nt == iterativeStmt)
+      checkIterativeStatementSemantics(root,functionIndex);
+    else if(root->nt == funCallStmt)
+      checkFunctionCallSemantics(root,functionIndex);
+    // else if(root->nt == returnStmt)
+    //   checkReturnSemantics(root,functionIndex);
+
+    root = root->next;
+    if(root == NULL)
+      return;
+
+  }
 }
