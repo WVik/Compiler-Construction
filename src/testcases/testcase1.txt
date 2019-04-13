@@ -1,7 +1,7 @@
 %Test Case 1
 %Following function computes the sum of user defined real numbers
 %The variable d3 maintains the sum of values
-_sumN  input parameter list [int d5cc34]
+_sumN  input parameter list [int d5cc34]  
 output parameter list[real d3];
 	type int : b5b567;
 	b5b567 <--- 1;
@@ -9,7 +9,7 @@ output parameter list[real d3];
 	while ( b5b567 <= d5cc34)
 		read( c3bd);
 		d3 <--- d3 + c3bd;
-		b5b567 <--- d3*(d3+d3)*d3+d3;
+		b5b567 <--- b5b567 + 1;
 	endwhile
 	return [d3];
 end

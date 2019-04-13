@@ -116,6 +116,6 @@ Stack bufferStack;
 
 //Global variable for
 TreeNode root;
-
-
+int n2,n1;
+int syntacticCorrectnessFlag;
 #endif

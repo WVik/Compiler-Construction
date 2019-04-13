@@ -243,10 +243,10 @@ void populateTokenList()
 	tokenList[21] = TK_NUM;
 	tokenList[24] = TK_RNUM;
 	tokenList[28] = TK_ASSIGNOP;
-	tokenList[29] = TK_LT;
+	tokenList[29] = TK_ERROR;
 	tokenList[30] = TK_LT;
 	tokenList[31] = TK_LE;
-	tokenList[32] = TK_LT;
+	tokenList[32] = TK_ERROR;
 	tokenList[34] = TK_GT;
 	tokenList[35] = TK_GE;
 	tokenList[37] = TK_EQ;
@@ -532,7 +532,7 @@ void populateTransitionTable()
 	stateFlags[28] = 2;
 
 	//State 29
-	stateFlags[29] = 5;
+	stateFlags[29] = 3;
 
 	//State 30
 	stateFlags[30] = 3;
@@ -541,7 +541,7 @@ void populateTransitionTable()
 	stateFlags[31] = 2;
 
 	//State 32
-	stateFlags[32] = 4;
+	stateFlags[32] = 3;
 
 	//State 33
 	transitionTable[33][25] = 35;
@@ -574,11 +574,14 @@ void populateTransitionTable()
 	stateFlags[39] = 2;
 
 	//State 40
+	for(int i=0;i<(numInputs-3);i++)
+		transitionTable[40][i] = 41;
+	transitionTable[40][30] = 41;
+
 	transitionTable[40][27] = 40;
 	transitionTable[40][28] = 40;
 	transitionTable[40][29] = 40;
-	for(int i=0;i<(numInputs-3);i++)
-		transitionTable[40][i] = 41;
+
 
 	stateFlags[40] = 1;
 
@@ -675,10 +678,13 @@ tokenInfo* getNextToken(FILE* fp)
 
 
 	char ch = inputBuffer[end];
+
 	if(ch=='\n') lineNumber++;
+
 	if(end==numRead-1 && checkFlag==1 && inputBuffer[end]=='\n' && begin==end)
 		return NULL;
-	if((end== numRead && checkFlag==1) || (ch==NULL)){
+
+	if((end== numRead && checkFlag==1) || (ch==EOF)){
 		if(begin==end) return NULL;
 		overFlag=1;
 		end--;
@@ -744,6 +750,7 @@ tokenInfo* getNextToken(FILE* fp)
 
 	if(stateFlags[state] >= 2){
 
+
 			//Retract using flag
 			if(inputBuffer[begin]==' ' && state==57){
 				begin=end;
@@ -753,19 +760,26 @@ tokenInfo* getNextToken(FILE* fp)
 			}
 
 			if(begin==end && state==57){
-				end++;
-				begin=end;
+
 				tokenInfo* t=(tokenInfo*) malloc(sizeof(tokenInfo));
 				char str[2];
 				str[0]=inputBuffer[end];
 				str[1]='\0';
-				t->lexeme=str;
+				t->lexeme=(char*)malloc(sizeof(char)*2);
+				strcpy(t->lexeme,str);
 				t->lineNumber=lineNumber;
 				t->token= TK_ERROR;
+				end++;
+				begin=end;
 				return t;
 
 			}
+
+
+
+
 			if(inputBuffer[end]=='\n') lineNumber--;
+
 			if(end>begin)
 			    end -= (stateFlags[state]-2);
 			else if(end<=begin && (end-(stateFlags[state]-2))>=0) {
@@ -780,11 +794,18 @@ tokenInfo* getNextToken(FILE* fp)
 
 
 			}
+
+			//Exclude newline for comments
+			if(prevState == 42 && state == 43)
+				end--;
+
 			int strlength=end-begin+2;
 			if(end<begin) strlength=(bufferLength-begin)+end+2;
 
 			//Get lexeme
 			char* lexeme = (char*)malloc(sizeof(char)*strlength);
+
+
 			if(end>=begin){
 				lexeme[end-begin+1] = '\0';
 				for(int i=begin;i<=end;i++)
@@ -805,12 +826,22 @@ tokenInfo* getNextToken(FILE* fp)
 				    lexeme[j+(bufferLength-begin)]=inputBuffer[j];
 				}
         		}
+
+			//Reinclude \n into the buffer for comments
+			if(prevState == 42 && state == 43)
+				end++;
+
 			prevEnd=end;
 			prevBegin=begin;
 			tokenInfo* t=(tokenInfo*) malloc(sizeof(tokenInfo));
 			t->lexeme = lexeme ;
 			t->lineNumber= lineNumber;
 			t->token=getTokenEnum(lexeme) ;
+
+			if(state == 43 && prevState==42)
+			{
+				lineNumber++;
+			}
 
 			end++;
 			begin=end;

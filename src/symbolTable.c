@@ -739,3 +739,165 @@ int checkGlobalRedifinition(char* string)
 			return 1;
 	return 0;
 }
+
+char* getTpString(int type)
+{
+  if(type==-1)
+    return "NotDefined";
+  if(type == 0)
+    return "integer";
+  else if(type == 1)
+    return "real";
+  else
+    return recordTable[type-2].recordName;
+}
+
+void printSymbolTable()
+{
+  printf("\n");
+
+printf("Printing Symbol Table\n\n");
+printf("%20s\t\t%20s\t\t%20s\t\t%20s\n\n","Lexeme","Type","Scope","Offset");
+//printf("\nLexeme\t\ttype\t\tscope\t\toffset\n\n");
+
+ for(int i=0;i<currGlobalIndex;i++)
+  {
+    if(globalTable[i].type>=2)
+    {
+        printf("%20s\t\t",globalTable[i].symName);
+        int type = globalTable[i].type;
+
+        int index = type-2;
+
+        for(int j=0;j<recordTable[index].numFields;j++)
+        {
+          if(j!=recordTable[index].numFields-1)
+            printf("%s x ",getTpString(recordTable[index].recordFields[j].type));
+          else
+            printf("%s\t\t",getTpString(recordTable[index].recordFields[j].type));
+
+        }
+
+        printf("%20s\t\t%20s","global","-");
+    }
+    else if(globalTable[i].type!=-1)
+    {
+      printf("%20s\t\t%20s\t\t%20s\t\t%20s",globalTable[i].symName,getTpString(globalTable[i].type),"global","-");
+    }
+    printf("\n");
+  }
+
+
+  for(int i=0;i<currFuncIndex;i++)
+  {
+    // printf("\nFunction - %s\n",functionTable[i]->funcName);
+
+    for(int j=0;j<functionTable[i]->currIndex;j++)
+    {
+      if(functionTable[i]->symTable[j].type >= 2)
+      {
+        printf("%20s\t\t",functionTable[i]->symTable[j].symName);
+        int type = functionTable[i]->symTable[j].type;
+
+        int index = type-2;
+
+
+        for(int k=0;k<recordTable[index].numFields;k++)
+        {
+          if(k!=recordTable[index].numFields-1)
+            printf("%s x ",getTpString(recordTable[index].recordFields[k].type));
+          else
+            printf("%s\t\t",getTpString(recordTable[index].recordFields[k].type));
+
+        }
+
+        printf("%20s\t\t%20d\n",functionTable[i]->funcName,functionTable[i]->symTable[j].offset);
+
+      }
+      else if(functionTable[i]->symTable[j].type != -1)
+      {
+          printf("%20s\t\t%20s\t\t%20s\t\t%20d\n",functionTable[i]->symTable[j].symName,getTpString(functionTable[i]->symTable[j].type),functionTable[i]->funcName,functionTable[i]->symTable[j].offset);
+
+      }
+
+    }
+
+  }
+}
+void printMemory(){
+  printf("\nPrinting memory used by each function\n");
+  int sum=0;
+  for(int i=0;i<currFuncIndex;i++){
+    sum=0;
+    for(int j=0;j<functionTable[i]->currIndex;j++){
+      sum+=functionTable[i]->symTable[j].width;
+    }
+    printf("\n%s\t%d\n", functionTable[i]->funcName,sum);
+  }
+
+}
+void printGlobalRecords(){
+  printf("\nPrinting details of global records\n\n");
+  for(int i=0;i<currRecIndex;i++){
+    printf("%s\t\t",recordTable[i].recordName);
+    for(int j=0;j< recordTable[i].numFields;j++){
+      if(j==recordTable[i].numFields-1){
+        printf("%s",getTpString(recordTable[i].recordFields[j].type));
+      }
+      else printf("%s,",getTpString(recordTable[i].recordFields[j].type));
+    }
+    printf("\t\t%d\n",recordTable[i].recordWidth);
+  }
+}
+void printGlobalTable(){
+
+  printf("Printing Global table\n\n");
+
+printf("%20s\t\t%20s\t\t%20s\n\n","Lexeme","Type","Offset");
+
+  int offset = 0;
+  for(int i=0;i<currGlobalIndex;i++)
+  {
+    if(globalTable[i].type>=2)
+    {
+        printf("%20s\t\t",globalTable[i].symName);
+        int type = globalTable[i].type;
+
+        int index = type-2;
+
+        for(int j=0;j<recordTable[index].numFields;j++)
+        {
+          if(j!=recordTable[index].numFields-1)
+            printf("%s x ",getTpString(recordTable[index].recordFields[j].type));
+          else
+            printf("%s\t\t",getTpString(recordTable[index].recordFields[j].type));
+
+        }
+
+        printf("%20d\n",offset);
+
+    }
+    else
+    {
+      printf("%20s\t\t%20s\t\t%20d-",globalTable[i].symName,getTpString(globalTable[i].type),offset);
+    }
+
+    offset+= globalTable[i].width;
+
+    printf("\n");
+  }
+
+}
+void calculateOffset()
+{
+  for(int i=0;i<currFuncIndex;i++)
+  {
+    int offset = 0;
+
+    for(int j=0;j<functionTable[i]->currIndex;j++)
+    {
+      functionTable[i]->symTable[j].offset = offset;
+      offset+= functionTable[i]->symTable[j].width;
+    }
+  }
+}

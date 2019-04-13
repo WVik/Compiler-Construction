@@ -13,3 +13,5 @@ int isValidWhile(TreeNode root,TreeNode stmtNode);
 void checkConditionalStatementSemantics(TreeNode root,int functionIndex);
 void checkStatementSemantics(TreeNode root,int functionIndex);
 void checkIOStatementSemantics(TreeNode root,int functionIndex);
+void semanticAnalyser(TreeNode root);
+void checkReturnStatementSemantics(TreeNode root,int functionIndex);

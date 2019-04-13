@@ -10,6 +10,7 @@ struct symTableEntry{
   int type;
   int width;
   short varChanged;
+  int offset;
   //Indexing into record table is done by type-2
 };
 

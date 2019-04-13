@@ -5,7 +5,7 @@
 	Yajat Dawar - 2015B4A70620P
 	Anmol Naugaria - 2015B4A70835P
 */
-	
+
 #ifndef _LEXERDEFINITIONS_
 #define _LEXERDEFINITIONS_
 
@@ -86,10 +86,3 @@ int retractionflag,checkFlag,overFlag,prevState,prevEnd,prevBegin,lineNumber,num
 
 
 #endif
-
-
-
-
-
-
-

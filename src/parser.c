@@ -10,8 +10,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-//#include "AST.c"
-
 
 
 //Map from an enum of type nonterminal to its string
@@ -42,7 +40,7 @@ void initializeParser(FILE* fp)
 
   //Initialize Grammar Production Rules
   g = (Grammar)malloc(sizeof(Production)*numRules);
-
+  syntacticCorrectnessFlag = 1;
 	RHSRuleIndices = (int**)malloc(numNonTerminals*sizeof(int*));
   currentIndex = (int*)malloc(sizeof(int)*numNonTerminals);
 
@@ -59,6 +57,9 @@ void initializeParser(FILE* fp)
   for(int i=0;i<numNonTerminals;i++)
     visited[i] = 0;
 
+
+  //Variables for symbol table printing and evaluation use
+  n1 = n2 = 0;
 
   //Parse the grammar and make liked lists corresponding to each rule
    getGrammar(fp);
@@ -114,6 +115,7 @@ void initializeParser(FILE* fp)
   init->next = NULL;
   init->id = nonterminal;
   pushStack(globalStack,init);
+
 }
 
 
@@ -359,158 +361,158 @@ void merge(FirstFollowNode* insertInto, FirstFollowNode* insertFrom, int nonTerm
 
 //Return a set of tokens from a string separated by spaces
 int parseWithSpaces(char* string, char** parsed)
-  {
+{
 
-  	int len  = strlen(string);
-  	char* str = (char*)malloc(sizeof(char)*MAX);
-  	strcpy(str,string);
+	int len  = strlen(string);
+	char* str = (char*)malloc(sizeof(char)*MAX);
+	strcpy(str,string);
 
-   	int i;
+ 	int i;
 
-  	for (i = 0; i < MAX; i++) {
-  		parsed[i] = strsep(&str, " ");
+	for (i = 0; i < MAX; i++) {
+		parsed[i] = strsep(&str, " ");
 
-  		if (parsed[i] == NULL)
-  			{
-  				break;
-  			}
-  		if (strlen(parsed[i]) == 0)
-  			i--;
-  	}
+		if (parsed[i] == NULL)
+			{
+				break;
+			}
+		if (strlen(parsed[i]) == 0)
+			i--;
+	}
 
-  	return i;
-  }
+	return i;
+}
 
 
 //Get the enum of terminal from a string
-  int getIndexNonTerminal(char* string)
-  {
-  	for(int i=0;i<numNonTerminals;i++)
-  	{
-  		if(strcmp(string,nonTerminalString[i])==0)
-  			return i;
-  	}
-  	return -1;
-  }
+int getIndexNonTerminal(char* string)
+{
+	for(int i=0;i<numNonTerminals;i++)
+	{
+		if(strcmp(string,nonTerminalString[i])==0)
+			return i;
+	}
+	return -1;
+}
 
 
 //Get the enum of nonterminal from a string
-  int getIndexTerminal(char* string)
-  {
-  	for(int i=0;i<numTerminals;i++)
-  	{
-  		if(strcmp(string,TerminalString[i])==0)
-  			return i;
-  	}
-  	return -1;
-  }
+int getIndexTerminal(char* string)
+{
+	for(int i=0;i<numTerminals;i++)
+	{
+		if(strcmp(string,TerminalString[i])==0)
+			return i;
+	}
+	return -1;
+}
 
 
 //Make data structures to represent grammar from the file given by the file pointer fp
 void getGrammar(FILE* fp)
-  {
+{
 
-  	if (fp==NULL)
-        {
-            printf("no such file \n");
-            return;
-        }
+	if (fp==NULL)
+      {
+          printf("no such file \n");
+          return;
+      }
 
-   	int ruleIndex = 0;
-   	char line[MAX];
+ 	int ruleIndex = 0;
+ 	char line[MAX];
 
-   	while(fgets(line, MAX, fp)!=NULL)
-   	{
-   		line[strlen(line)-2] = '\0';
+ 	while(fgets(line, MAX, fp)!=NULL)
+ 	{
+ 		line[strlen(line)-2] = '\0';
 
-   		char* parsed[MAX];
-   		int size = parseWithSpaces(line,parsed);
+ 		char* parsed[MAX];
+ 		int size = parseWithSpaces(line,parsed);
 
-   		g[ruleIndex] = (Production)malloc(sizeof(struct production));
+ 		g[ruleIndex] = (Production)malloc(sizeof(struct production));
 
-   		g[ruleIndex]->head = NULL;
+ 		g[ruleIndex]->head = NULL;
 
-   		for(int i=0;i<size;i++)
-   		{
-   				int len = strlen(parsed[i]);
+ 		for(int i=0;i<size;i++)
+ 		{
+ 				int len = strlen(parsed[i]);
 
-   				if(parsed[i][0]=='-')
-   					continue;
+ 				if(parsed[i][0]=='-')
+ 					continue;
 
-   				if(parsed[i][0]=='<' && parsed[i][len-1]=='>')
-   				{
-   					// case of Non Terminal
-   					parsed[i][len-1] = '\0';
-   					parsed[i]++;
+ 				if(parsed[i][0]=='<' && parsed[i][len-1]=='>')
+ 				{
+ 					// case of Non Terminal
+ 					parsed[i][len-1] = '\0';
+ 					parsed[i]++;
 
-   					int ind = getIndexNonTerminal(parsed[i]);
+ 					int ind = getIndexNonTerminal(parsed[i]);
 
-   					if(i==0)
-   					{
-   						// LHS
-   						g[ruleIndex]->lhs = ind;
-   					}
-   					else
-   					{
-   						// RHS
-   						RhsNode r = (RhsNode)malloc(sizeof(struct rhsNode));
-    					RhsNode temp = g[ruleIndex]->head;
-
-              //For follow computation
-              RHSRuleIndices[ind][currentIndex[ind]] = ruleIndex;
-              currentIndex[ind]++;
-
-  						if(temp == NULL){
-    							g[ruleIndex]->head = r;
-    						  r->nt = ind;
-      				    r->id = nonterminal;
-      				    r->next = NULL;
-  						}
-  						else
-  						{
-      						while(temp->next != NULL)
-      							 temp = temp->next;
-
-      						temp->next = r;
-    						  r->nt = ind;
-  	  				    r->id = nonterminal;
-  	  				    r->next = NULL;
-
-	  				    }
-   					  }
-
-   				 }
-   				else
-   				{
-   					// case of Terminal
-   					int ind = getIndexTerminal(parsed[i]);
-
- 					  RhsNode r = (RhsNode)malloc(sizeof(struct rhsNode));
+ 					if(i==0)
+ 					{
+ 						// LHS
+ 						g[ruleIndex]->lhs = ind;
+ 					}
+ 					else
+ 					{
+ 						// RHS
+ 						RhsNode r = (RhsNode)malloc(sizeof(struct rhsNode));
   					RhsNode temp = g[ruleIndex]->head;
 
-  						if(temp == NULL){
+            //For follow computation
+            RHSRuleIndices[ind][currentIndex[ind]] = ruleIndex;
+            currentIndex[ind]++;
 
-  							 g[ruleIndex]->head = r;
-							   r->t = ind;
-	  				     r->id = terminal;
-	  				     r->next = NULL;
-  						}
-  						else
-  						{
-      						while(temp->next != NULL)
-      							temp = temp->next;
+						if(temp == NULL){
+  							g[ruleIndex]->head = r;
+  						  r->nt = ind;
+    				    r->id = nonterminal;
+    				    r->next = NULL;
+						}
+						else
+						{
+    						while(temp->next != NULL)
+    							 temp = temp->next;
 
-      						temp->next = r;
-      						r->t = ind;
-    	  				  r->id = terminal;
-    	  				  r->next = NULL;
-	  				    }
+    						temp->next = r;
+  						  r->nt = ind;
+	  				    r->id = nonterminal;
+	  				    r->next = NULL;
 
- 				}
-   		}
-    ruleIndex++;
-   	}
-  }
+  				    }
+ 					  }
+
+ 				 }
+ 				else
+ 				{
+ 					// case of Terminal
+ 					int ind = getIndexTerminal(parsed[i]);
+
+					  RhsNode r = (RhsNode)malloc(sizeof(struct rhsNode));
+					RhsNode temp = g[ruleIndex]->head;
+
+						if(temp == NULL){
+
+							 g[ruleIndex]->head = r;
+						   r->t = ind;
+  				     r->id = terminal;
+  				     r->next = NULL;
+						}
+						else
+						{
+    						while(temp->next != NULL)
+    							temp = temp->next;
+
+    						temp->next = r;
+    						r->t = ind;
+  	  				  r->id = terminal;
+  	  				  r->next = NULL;
+  				    }
+
+				}
+ 		}
+  ruleIndex++;
+ 	}
+}
 
 
 
@@ -584,7 +586,12 @@ void createParseTable()
     }
   }
 
+  /*
+    TODO : Add manually curated rules like 'while endwhile'
+  */
+
   //printParseTable();
+
 }
 
 //Print parse table column*row
@@ -666,24 +673,27 @@ void buildTreeAndParse(FILE* fp){
 
   TokenInfo newToken = getNextToken(fp);
 
+  //While the new token is error or comment, skip it
   while(newToken->token == TK_COMMENT || newToken->token == TK_ERROR)
     {
-
       if(newToken->token == TK_ERROR)
+      {
         printf("Line %d: Unknown symbol %s\n",newToken->lineNumber,TerminalString[newToken->token]);
-
+        syntacticCorrectnessFlag = 0;
+      }
       newToken = getNextToken(fp);
     }
 
-
+  //Start parsing after getting a valid symbol
   while(getTop(globalStack) != NULL)
   {
     // printf("Lookahead: %s\n",newToken->lexeme);
     // printf("Global Stack : ");
     // printStack(globalStack);
 
-    StackNode top = getTop(globalStack);
-    TreeNode currentRoot = top->tn;
+    StackNode top = getTop(globalStack); //Current stacktop
+
+    TreeNode currentRoot = top->tn; //Current treenode
 
     //If stack top has a terminal
     if(top->tn->id == terminal)
@@ -694,17 +704,14 @@ void buildTreeAndParse(FILE* fp){
         //Get a new token from the stream
 				top->tn->leafInfo = newToken;
 				newToken = getNextToken(fp);
+
         //printf("Token: %s\n",TerminalString[newToken->token]);
 
-
+        //If stream is empty and stack is also empty, it means parsing is successful
         if(newToken == NULL && top->tn->next == NULL)
           {
-             printf("Parsing successful: Program is syntactically correct.");
-            // printf("Printing Parse Tree: \n\n");
+            //printf("Parsing successful: Program is syntactically correct.");
             pop(globalStack);
-            //createAST(root);
-            // printParseTree(root,0);
-            // printInorderTraversal(root);
             return;
           }
 
@@ -715,11 +722,15 @@ void buildTreeAndParse(FILE* fp){
           if(newToken == NULL || overFlag == 1)
           {
             //printf("Program is syntactically incorret. Kindly recheck!\n");
+            syntacticCorrectnessFlag = 0;
             return;
           }
 
           if(newToken->token == TK_ERROR)
-            printf("Line %d: Unknown symbol %s\n",newToken->lineNumber,TerminalString[newToken->token]);
+            {
+              printf("Line %d: Unknown symbol %s\n",newToken->lineNumber,newToken->lexeme);
+              syntacticCorrectnessFlag = 0;
+            }
 
           newToken = getNextToken(fp);
         }
@@ -731,7 +742,7 @@ void buildTreeAndParse(FILE* fp){
         continue;
        }
 
-
+       syntacticCorrectnessFlag = 0;
        //Terminal Terminal Mismatch Case
        /*
           *If the stack top has a terminal and it doesn't match the lookahead, keep popping
@@ -753,7 +764,7 @@ void buildTreeAndParse(FILE* fp){
     // printf("Global Stack : ");
     // printStack(globalStack);
 
-
+    //Stacktop is non-terminal
 
     int ruleNum = ParseTable[top->tn->nt][newToken->token];
 
@@ -761,6 +772,7 @@ void buildTreeAndParse(FILE* fp){
     //Error Handling using Synch
     if(ruleNum < 0)
     {
+      syntacticCorrectnessFlag = 0;
       //Synch case
       if(ruleNum == SYNCH)
       {
@@ -769,12 +781,11 @@ void buildTreeAndParse(FILE* fp){
         continue;
       }
 
-
+      int printErrorFlag = 0;
       while(ParseTable[top->tn->nt][newToken->token] < 0)
       {
 
         newToken = getNextToken(fp);
-
 
         while(newToken == NULL || overFlag == 1 || newToken->token == TK_COMMENT || newToken->token==TK_ERROR)
         {
@@ -786,7 +797,7 @@ void buildTreeAndParse(FILE* fp){
           }
 
           if(newToken->token == TK_ERROR)
-            printf("Line %d: Unknown symbol %s\n",newToken->lineNumber,TerminalString[newToken->token]);
+            printf("Line %d: Unknown symbol %s\n",newToken->lineNumber,newToken->lexeme);
 
           newToken = getNextToken(fp);
         }
@@ -797,8 +808,10 @@ void buildTreeAndParse(FILE* fp){
         //printf("%d\n",ruleNum);
         if(ruleNum == SYNCH)
           break;
+        printErrorFlag = 1;
 
-        printf("Line %d: The token %s does not match the expected type %s\n",newToken->lineNumber, TerminalString[newToken->token], nonTerminalString[top->tn->nt]);
+        if(printErrorFlag == 0)
+          printf("Line %d: The token %s does not match the expected type %s\n",newToken->lineNumber, TerminalString[newToken->token], nonTerminalString[top->tn->nt]);
         //printf("Line %d: Missing symbol %s\n",newToken->lineNumber, TerminalString[newToken->token], nonTerminalString[top->tn->nt]);
       }
 
@@ -891,7 +904,8 @@ void buildTreeAndParse(FILE* fp){
     pop(bufferStack);
   }
 
-  printf("The program is syntactically incorrect. Kindly recheck!\n");
+  syntacticCorrectnessFlag = 0;
+  //printf("The program is syntactically incorrect. Kindly recheck!\n");
 
 
 
@@ -987,37 +1001,3 @@ void printParseTree(TreeNode root, char *outfile){
     fclose(fptr);
 
 }
-
-
-
-
-
-
-
-
-// void printInorderTraversal(TreeNode root)
-// {
-//   if(root==NULL)
-//     return ;
-
-//   printInorderTraversal(root->children);
-
-//   if(root->id==terminal){
-
-//         printf("%s ",TerminalString[root->t]);
-//         return;
-//   }
-
-//   else
-//   printf("%s ",nonTerminalString[root->nt]);
-
-//   TreeNode temp = root->children;
-
-//   while(temp!=NULL)
-//   {
-//     temp = temp->next;
-//     printInorderTraversal(temp);
-//   }
-
-
-// }

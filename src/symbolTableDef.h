@@ -39,5 +39,11 @@ int checkGlobalRedeclaration(char* string);
 void reallocateSymbolTable(int currentFunctionIndex);
 void reallocateRecordTable();
 int getFunctionIndex(char* funcName);
+void printSymbolTable();
+void printMemory();
+void printGlobalRecords();
+void calculateOffset();
+char* getTpString(int type);
+void printGlobalTable();
 
 #endif
