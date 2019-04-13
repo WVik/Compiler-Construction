@@ -1,20 +1,22 @@
-
-%Test Case 3
-%Following program computes an arithmetic expression 
-
-% The following function computes the function value for the given inputs 
-_computeFunctionValue input parameter list[int c3, int c4, int c5]
+_computeFunctionValue input parameter list[real c7, real c4, real c5]
 output parameter list [real c6];
+	record #finance
+		type int: value;
+		type real:rate;
+		type int: interest;
+	endrecord;
+	record #fina
+		type int: value;
+		type real:rate;
+		type int: interest;
+	endrecord;
 	type real : d4cbcd5677;
 	type real : c4bbb;
-	c6 <--- 5000.79;
-	d4cbcd5677<--- ((c3 + 2*c4)-(c5-5))/ 4;
-	c4bbb <--- ((d4cbcd5677- 2.35)*(2345-234*8))+5*c3;
-	if((~(c4bbb == 0)) &&& (c4bbb > 78.56)) 
+	c6 <--- c4+c5;
+
+	if((~(c4bbb == 0)) &&& (c4bbb > 78.56))
 	then
 		c6<--- d4cbcd5677/c4bbb;
-	else
-		write(c4bbb);
 	endif
 
 	return [c6];
@@ -22,12 +24,18 @@ end
 
 
 %The following program computes the function value for the user defined input
-_main 
+_main
+	record #fin
+		type int: value;
+		type real:rate;
+		type int: interest;
+	endrecord;
+
 	type int : b5;
 	type int : d5cb34567;
 	type int :  b3b444 : global;
 	type real: c3;
-	b5 <--- 1;
+	b5 <--- 1.12;
 	read(d5cb34567);
 	read(b3b444);
 

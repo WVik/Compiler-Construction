@@ -500,6 +500,8 @@ void checkConditionalStatementSemantics(TreeNode root,int functionIndex)
 
 void checkStatementSemantics(TreeNode root,int functionIndex)
 {
+  if(root==NULL)
+    return;
   while(root!=NULL || (root->id == terminal && root->t == TK_ENDWHILE))
   {
     if(root->nt == ioStmt)
@@ -613,8 +615,8 @@ void checkIOStatementSemantics(TreeNode root , int functionIndex)
       return;
     }
     int type = getType(functionIndex,idNode);
-    if(type>=2)
-      printf("Line : %d Record type can't be written\n",idNode->leafInfo->lineNumber);
+    if(type>=2){}
+      //printf("Line : %d Record type can't be written\n",idNode->leafInfo->lineNumber);
   }
 }
 
