@@ -1,3 +1,11 @@
+/*
+ Group - 5
+ Vikram Waradpande - 2015B4A70454P
+ Rinkesh Jain - 2015B4A70590P
+ Yajat Dawar - 2015B4A70620P
+ Anmol Naugaria - 2015B4A70835P
+*/
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
@@ -38,6 +46,8 @@ void reserveMemory(FILE* fp)
     }
   }
 
+  fprintf(fp,"\n\nsection .text\n");
+
 }
 
 
@@ -68,8 +78,8 @@ void generateStmtCodeHelper(TreeNode root, FILE* fp)
   if(root->nt == conditionalStmt)
     generateConditionStmt(root,fp);
 
-  if(root->nt == booleanExpression)
-    generateBoolean(root,fp);
+  // if(root->nt == booleanExpression)
+  //   generateBoolean(root,fp);
 }
 
 
@@ -104,7 +114,8 @@ int generateArithmeticStmt(TreeNode root,int offset,FILE* fp)
 
     if(root->t == TK_NUM || root->t == TK_RNUM)
     {
-        fprintf(fp,"mov dword[ecx+%d], %s",root->leafInfo->lexeme,offset,root->leafInfo);
+        fprintf(fp,"mov dword[ecx+%d], %s\n",offset,root->leafInfo->lexeme);
+        return offset;
     }
 
     if(root->t == TK_ID && getType(0,root)<2)
@@ -207,7 +218,7 @@ void generateConditionStmt(TreeNode root,FILE* fp)
   fprintf(fp,"pop eax\n");
   fprintf(fp,"pop ebx\n");
   generateStmtCode(elsePartNode,fp);
-  fprintf(fp,"label%d:\n"label);
+  fprintf(fp,"label%d:\n",label);
   labelCount++;
   fprintf(fp,"pop eax\n");
   fprintf(fp,"pop ebx\n");
@@ -220,8 +231,8 @@ int generateBoolean(TreeNode root,FILE* fp)
 {
   if(root->t == TK_AND)
   {
-    int leftLabel = generateBoolean(root->left,fp);
-    fprintf(fp,"jmp ")
+    int leftLabel = generateBoolean(root->children,fp);
+    fprintf(fp,"jmp ");
     fprintf(fp,"label%d\n",leftLabel);
 
   }
@@ -238,7 +249,7 @@ int generateBoolean(TreeNode root,FILE* fp)
     fprintf(fp,"push eax\n");
     fprintf(fp,"push ebx\n");
     fprintf(fp,"mov eax,dword[%s]\n",root->children->leafInfo->lexeme);
-    fprintf(fp,"mov ebx,dword[%s]\n",root->children->right->leafInfo->lexeme);
+    fprintf(fp,"mov ebx,dword[%s]\n",root->children->next->leafInfo->lexeme);
     labelCount++;
     fprintf(fp,"jle label%d\n",labelCount);
     return labelCount;
@@ -248,7 +259,7 @@ int generateBoolean(TreeNode root,FILE* fp)
     fprintf(fp,"push eax\n");
     fprintf(fp,"push ebx\n");
     fprintf(fp,"mov eax,dword[%s]\n",root->children->leafInfo->lexeme);
-    fprintf(fp,"mov ebx,dword[%s]\n",root->children->right->leafInfo->lexeme);
+    fprintf(fp,"mov ebx,dword[%s]\n",root->children->next->leafInfo->lexeme);
     labelCount++;
     fprintf(fp,"jge label%d\n",labelCount);
     return labelCount;
@@ -258,7 +269,7 @@ int generateBoolean(TreeNode root,FILE* fp)
     fprintf(fp,"push eax\n");
     fprintf(fp,"push ebx\n");
     fprintf(fp,"mov eax,dword[%s]\n",root->children->leafInfo->lexeme);
-    fprintf(fp,"mov ebx,dword[%s]\n",root->children->right->leafInfo->lexeme);
+    fprintf(fp,"mov ebx,dword[%s]\n",root->children->next->leafInfo->lexeme);
     labelCount++;
     fprintf(fp,"jl label%d\n",labelCount);
     return labelCount;
@@ -268,9 +279,10 @@ int generateBoolean(TreeNode root,FILE* fp)
     fprintf(fp,"push eax\n");
     fprintf(fp,"push ebx\n");
     fprintf(fp,"mov eax,dword[%s]\n",root->children->leafInfo->lexeme);
-    fprintf(fp,"mov ebx,dword[%s]\n",root->children->right->leafInfo->lexeme);
+    fprintf(fp,"mov ebx,dword[%s]\n",root->children->next->leafInfo->lexeme);
     labelCount++;
     fprintf(fp,"jg label%d\n",labelCount);
     return labelCount;
   }
+  return 0;
 }

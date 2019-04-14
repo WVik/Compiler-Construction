@@ -1,3 +1,11 @@
+/*
+ Group - 5
+ Vikram Waradpande - 2015B4A70454P
+ Rinkesh Jain - 2015B4A70590P
+ Yajat Dawar - 2015B4A70620P
+ Anmol Naugaria - 2015B4A70835P
+*/
+
 #include "symbolTableDef.h"
 #include "lexer.h"
 #include "parser.h"
@@ -62,3 +70,4 @@ SymTableEntry globalTable;
 //Hashtable for recordtypes
 RecordHashNode recordHashTable;
 int printErrorFlag;
+int semanticCorrectnessFlag;

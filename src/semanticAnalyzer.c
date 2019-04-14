@@ -1,3 +1,11 @@
+/*
+ Group - 5
+ Vikram Waradpande - 2015B4A70454P
+ Rinkesh Jain - 2015B4A70590P
+ Yajat Dawar - 2015B4A70620P
+ Anmol Naugaria - 2015B4A70835P
+*/
+
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
@@ -20,17 +28,20 @@ void checkFunctionCallSemantics(TreeNode root, int functionIndex)
   //Invalid call
   if(calleeIndex == -1)
   {
+    semanticCorrectnessFlag = 0;
     printf("Line %d: No function named %s declared before use\n",lineNumber,root->children->leafInfo->lexeme);
     return;
   }
   if(calleeIndex == functionIndex)
   {
+    semanticCorrectnessFlag = 0;
     printf("Line %d : Function %s cant call itself \n",lineNumber,root->children->leafInfo->lexeme);
     return;
   }
   //Called before declaration
   if(calleeIndex>functionIndex)
   {
+    semanticCorrectnessFlag = 0;
     printf("Line %d: Function %s called before defining\n",lineNumber,root->children->leafInfo->lexeme);
     return;
   }
@@ -54,12 +65,14 @@ void checkFunctionCallSemantics(TreeNode root, int functionIndex)
   //Number mismatch
   if(numOutputParams != functionTable[calleeIndex]->numOutputParams)
   {
+    semanticCorrectnessFlag = 0;
     printf("Line %d: Function %s returns %d parameters, recieved %d\n",lineNumber,root->children->leafInfo->lexeme,functionTable[calleeIndex]->numOutputParams,numOutputParams);
     return;
   }
 
   if(numInputParams != functionTable[calleeIndex]->numInputParams)
   {
+    semanticCorrectnessFlag = 0;
     printf("Line %d: Number of actual and formal parameters of function %s don't match\n",lineNumber,root->children->leafInfo->lexeme);
     return;
   }
@@ -108,6 +121,7 @@ void checkFunctionCallSemantics(TreeNode root, int functionIndex)
 
    if(formalType!=actualType)
    {
+     semanticCorrectnessFlag = 0;
      printf("Line %d: Function type mismatch.Output parameter number %d is expected to be of type %s\n",temp->leafInfo->lineNumber,i+1,getTypeString(formalType));
    }
 
@@ -138,7 +152,10 @@ void checkIterativeStatementSemantics(TreeNode root,int functionIndex)
   }
   endLine = stmtNode->leafInfo->lineNumber;
   if(isValidWhile(root->children->children,root->children->next) == 0)
+  {
     printf("Line %d-%d None of the variables participating in the iterations of the while loop gets updated \n",startLine,endLine);
+    semanticCorrectnessFlag = 0;
+  }
   checkBooleanSemantics(root->children->children,functionIndex);
   checkStatementSemantics(root->children->next,functionIndex);
 }
@@ -239,7 +256,10 @@ void checkIOStatementSemantics(TreeNode root , int functionIndex)
     {
       int type = getType(functionIndex,idNode);
       if(type>=2)
-        printf("Line : %d Record type can't be read \n",idNode->leafInfo->lineNumber);
+        {
+          printf("Line : %d Record type can't be read \n",idNode->leafInfo->lineNumber);
+          semanticCorrectnessFlag = 0;
+        }
       if(type == 0 || type == 1)
       {
         int symTableIndex = getVarIndex(functionIndex,idNode->leafInfo->lexeme);
@@ -269,7 +289,10 @@ void checkIOStatementSemantics(TreeNode root , int functionIndex)
           }
         }
         if(flag==0)
-          printf("Line %d:%s has no field named %s\n",idNode->leafInfo->lineNumber,idNode->leafInfo->lexeme,idNode->next->leafInfo->lexeme);
+          {
+            printf("Line %d:%s has no field named %s\n",idNode->leafInfo->lineNumber,idNode->leafInfo->lexeme,idNode->next->leafInfo->lexeme);
+            semanticCorrectnessFlag = 0;
+          }
         if(flag==1)
         {
           int symTableIndex = getVarIndex(functionIndex,idNode->leafInfo->lexeme);
@@ -286,6 +309,7 @@ void checkIOStatementSemantics(TreeNode root , int functionIndex)
       if(type == 0 || type == 1)
       {
         printf("Line %d:%s has no field named %s\n",idNode->leafInfo->lineNumber,idNode->leafInfo->lexeme,idNode->next->leafInfo->lexeme);
+        semanticCorrectnessFlag = 0;
         return;
       }
     }
@@ -309,12 +333,16 @@ void checkIOStatementSemantics(TreeNode root , int functionIndex)
           }
         }
         if(flag==0)
-          printf("Line %d:%s has no field named %s\n",recId->leafInfo->lineNumber,recId->leafInfo->lexeme,recId->next->leafInfo->lexeme);
+          {
+            printf("Line %d:%s has no field named %s\n",recId->leafInfo->lineNumber,recId->leafInfo->lexeme,recId->next->leafInfo->lexeme);
+            semanticCorrectnessFlag = 0;
+          }
         return;
       }
       if(type == 0 || type == 1)
       {
         printf("Line %d:%s has no field named %s\n",recId->leafInfo->lineNumber,recId->leafInfo->lexeme,recId->next->leafInfo->lexeme);
+        semanticCorrectnessFlag = 0;
         return;
       }
       return;
@@ -333,6 +361,7 @@ void checkReturnStatementSemantics(TreeNode root,int functionIndex)
   {
     if(functionTable[functionIndex]->numOutputParams != 0)
     {
+      semanticCorrectnessFlag = 0;
       printf("Line %d : Function expects %d output parameters but returning 0 output parameters\n",functionTable[functionIndex]->ASTNode->children->leafInfo->lineNumber,functionTable[functionIndex]->numOutputParams);
       return;
     }
@@ -342,6 +371,7 @@ void checkReturnStatementSemantics(TreeNode root,int functionIndex)
 
   if(functionTable[functionIndex]->numOutputParams == 0)
     {
+    semanticCorrectnessFlag = 0;
     printf("Line %d : Function expects no output parameters but returning some variables\n",root->leafInfo->lineNumber);
     return;
     }
@@ -353,13 +383,15 @@ void checkReturnStatementSemantics(TreeNode root,int functionIndex)
     outputParList=outputParList->next;
     if(strcmp(outputParList->leafInfo->lexeme,root->leafInfo->lexeme)!=0)
     {
-      printf("Line %d:%s not matches with %s in output parameter list\n",root->leafInfo->lineNumber,root->leafInfo->lexeme,outputParList->leafInfo->lexeme);
+      semanticCorrectnessFlag = 0;
+      printf("Line %d:%s does not match with %s in output parameter list\n",root->leafInfo->lineNumber,root->leafInfo->lexeme,outputParList->leafInfo->lexeme);
       returnCount++;
       outputParList = outputParList->next;
       if(root->next == NULL)
       {
         if(returnCount!=functionTable[functionIndex]->numOutputParams)
         {
+          semanticCorrectnessFlag = 0;
           printf("Line %d:Function expects %d output parameters but returning %d variables\n",root->leafInfo->lineNumber,functionTable[functionIndex]->numOutputParams,returnCount);
           return;
         }
@@ -373,16 +405,19 @@ void checkReturnStatementSemantics(TreeNode root,int functionIndex)
       int globalTableIndex = getGlobalIndex(root->leafInfo->lexeme);
       if(globalTableIndex == -1)
       {
+        semanticCorrectnessFlag = 0;
         printf("Line %d:%s is not declared\n",root->leafInfo->lineNumber,root->leafInfo->lexeme);
       }
       else if(globalTable[globalTableIndex].varChanged ==0)
       {
+        semanticCorrectnessFlag = 0;
         printf("Line %d:%s returned is not changed in the function\n",root->leafInfo->lineNumber,outputParList->leafInfo->lexeme);
       }
     }
     else
       if(symbolTable[symTableIndex].varChanged == 0)
       {
+        semanticCorrectnessFlag = 0;
         printf("Line %d:%s returned is not changed in the function\n",root->leafInfo->lineNumber,outputParList->leafInfo->lexeme);
       }
     returnCount++;
@@ -391,6 +426,7 @@ void checkReturnStatementSemantics(TreeNode root,int functionIndex)
     {
       if(returnCount!=functionTable[functionIndex]->numOutputParams)
       {
+        semanticCorrectnessFlag = 0;
         printf("Line %d:Function expects %d output parameters but returning %d variables\n",root->leafInfo->lineNumber,functionTable[functionIndex]->numOutputParams,returnCount);
         return;
       }

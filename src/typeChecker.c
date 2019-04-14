@@ -1,3 +1,12 @@
+/*
+ Group - 5
+ Vikram Waradpande - 2015B4A70454P
+ Rinkesh Jain - 2015B4A70590P
+ Yajat Dawar - 2015B4A70620P
+ Anmol Naugaria - 2015B4A70835P
+*/
+
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
@@ -43,6 +52,7 @@ int getType(int functionIndex,TreeNode root)
   else if(globalIndex!=-1)
     return globalTable[globalIndex].type;
 
+  semanticCorrectnessFlag = 0;
   printf("Line %d: Variable %s not declared before use.\n",root->leafInfo->lineNumber,root->leafInfo->lexeme);
   return -1;
 }
@@ -107,8 +117,10 @@ void checkAssignmentStatement(TreeNode root, int functionIndex)
           lhsType = recordTable[recIndex].recordFields[i].type;
 
       if(lhsType == -1)
-        printf("Line %d: Record %s not defined.\n",lhs->leafInfo->lineNumber,lhs->leafInfo->lexeme);
-
+        {
+          semanticCorrectnessFlag = 0;
+          printf("Line %d: Record %s has no field %s not defined.\n",lhs->leafInfo->lineNumber,lhs->leafInfo->lexeme,lhs->next->leafInfo->lexeme);
+        }
       }
 
       if(lhsType == -1)
@@ -131,12 +143,14 @@ void checkAssignmentStatement(TreeNode root, int functionIndex)
 
       if(rhsType == -1)
       {
+        semanticCorrectnessFlag = 0;
         printf("Line %d: Incorrect arithmetic expression.\n", lhs->leafInfo->lineNumber);
         return;
       }
 
       if(lhsType!=rhsType)
       {
+        semanticCorrectnessFlag = 0;
         printf("Line %d: Type mismatch: Error assigning type %s to %s of type %s\n",lhs->leafInfo->lineNumber,getTypeString(rhsType),lhs->leafInfo->lexeme,getTypeString(lhsType));
         return;
       }
@@ -157,6 +171,7 @@ int evalArithmeticExpressionType(TreeNode root,int functionIndex)
       if(symIndex!=-1)
         return functionTable[functionIndex]->symTable[symIndex].type;
 
+      semanticCorrectnessFlag = 0;
       printf("Line %d: Variable %s not declared before use.\n",root->leafInfo->lineNumber,root->leafInfo->lexeme);
       return -1;
     }
@@ -205,6 +220,7 @@ int evalArithmeticExpressionType(TreeNode root,int functionIndex)
 
             if(rightType+leftType >= 4)
               {
+                semanticCorrectnessFlag = 0;
                 printf("Line %d: Records can't be multipled\n",root->leafInfo->lineNumber);
               }
 
@@ -217,6 +233,7 @@ int evalArithmeticExpressionType(TreeNode root,int functionIndex)
               return leftType;
             if(rightType>=2)
             {
+              semanticCorrectnessFlag = 0;
               printf("Line %d: Cannot divide by a record\n",root->leafInfo->lineNumber);
             }
             return -1;
@@ -248,6 +265,7 @@ int evalArithmeticExpressionType(TreeNode root,int functionIndex)
         return recordTable[recordIndex].recordFields[i].type;
     }
 
+    semanticCorrectnessFlag = 0;
     printf("Line %d: Record %s has no field named %s\n",root->children->next->leafInfo->lineNumber,recordTable[recordIndex].recordName, root->children->next->leafInfo->lexeme);
     return -1;
   }
@@ -269,6 +287,7 @@ void checkBooleanSemantics(TreeNode root,int functionIndex)
       return;
     else
     {
+      semanticCorrectnessFlag = 0;
       printf("Line %d: Type Mismatch -> Comparison of %s of type %s with %s of type %s\n",root->children->leafInfo->lineNumber,root->children->leafInfo->lexeme,getTypeString(lhsType),root->children->next->leafInfo->lexeme,getTypeString(rhsType));
       return;
     }

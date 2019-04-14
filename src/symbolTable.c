@@ -1,3 +1,12 @@
+/*
+ Group - 5
+ Vikram Waradpande - 2015B4A70454P
+ Rinkesh Jain - 2015B4A70590P
+ Yajat Dawar - 2015B4A70620P
+ Anmol Naugaria - 2015B4A70835P
+*/
+
+
 #include "symbolTable.h"
 #include "lexer.h"
 #include "parser.h"
@@ -109,6 +118,7 @@ void populateRecordDefs(TreeNode root)
     {
       if(strcmp(functionTable[i]->funcName,functionName) == 0)
       {
+        semanticCorrectnessFlag = 0;
         if(printErrorFlag==1)printf("Line %d: Function %s already declared\n",root->children->leafInfo->lineNumber,functionName);
         return;
       }
@@ -147,6 +157,7 @@ void populateRecordDefs(TreeNode root)
         //Check if record already defined
         if(checkRecordRedeclaration(recordName))
         {
+          semanticCorrectnessFlag = 0;
           if(printErrorFlag==1)printf("Line %d: Record %s already declared\n",recIDNode->leafInfo->lineNumber,recordName);
           recIDNode = recIDNode->next;
           continue;
@@ -236,6 +247,7 @@ void populateGlobalVars(TreeNode root)
 
                 if(checkGlobalRedifinition(root->next->leafInfo->lexeme))
                 {
+                  semanticCorrectnessFlag = 0;
                   if(printErrorFlag==1)printf("Line %d: Global variable %s redeclared.\n",root->next->leafInfo->lineNumber,root->next->leafInfo->lexeme);
                   root = root->next->next->next;
                   continue;
@@ -331,6 +343,7 @@ void populateDeclarations(TreeNode root,int currentFunctionIndex)
 
             if(checkVariableRedefinition(currentFunctionIndex,root->next->leafInfo->lexeme))
             {
+              semanticCorrectnessFlag = 0;
               if(printErrorFlag==1)printf("Line %d: Variable %s redeclared.\n",root->next->leafInfo->lineNumber,root->next->leafInfo->lexeme);
               root = root->next->next->next;
               continue;
@@ -446,6 +459,7 @@ void handleInputPar(TreeNode root,int currentFunctionIndex)
 
       if(checkGlobalRedifinition(varNameNode->leafInfo->lexeme))
       {
+        semanticCorrectnessFlag = 0;
         if(printErrorFlag==1)printf("Line %d: Variable %s already declared as a global.\n",varNameNode->leafInfo->lineNumber,varNameNode->leafInfo->lexeme);
         functionTable[currentFunctionIndex]->symTable[numParams].type = -1;
         functionTable[currentFunctionIndex]->symTable[numParams].width = 0;
@@ -462,6 +476,7 @@ void handleInputPar(TreeNode root,int currentFunctionIndex)
         {
           if(!checkRecordRedeclaration(temp->leafInfo->lexeme))
           {
+              semanticCorrectnessFlag = 0;
               if(printErrorFlag==1)printf("Line %d: Record %s not defined.\n",temp->leafInfo->lineNumber,temp->leafInfo->lexeme);
               functionTable[currentFunctionIndex]->symTable[numParams].type = -1;
               functionTable[currentFunctionIndex]->symTable[numParams].width = 0;
@@ -536,6 +551,7 @@ void handleOutputPar(TreeNode root,int currentFunctionIndex)
 
     if(checkGlobalRedifinition(varNameNode->leafInfo->lexeme))
     {
+      semanticCorrectnessFlag = 0;
       if(printErrorFlag==1)printf("Line %d: Variable %s already declared as a global.\n",varNameNode->leafInfo->lineNumber,varNameNode->leafInfo->lexeme);
       functionTable[currentFunctionIndex]->symTable[numParams].type = -1;
       functionTable[currentFunctionIndex]->symTable[numParams].width = 0;
@@ -552,6 +568,7 @@ void handleOutputPar(TreeNode root,int currentFunctionIndex)
       {
         if(!checkRecordRedeclaration(temp->leafInfo->lexeme))
         {
+            semanticCorrectnessFlag = 0;
             if(printErrorFlag==1)printf("Line %d: Record %s not defined.\n",temp->leafInfo->lineNumber,temp->leafInfo->lexeme);
             functionTable[currentFunctionIndex]->symTable[numParams].type = -1;
             functionTable[currentFunctionIndex]->symTable[numParams].width = 0;
