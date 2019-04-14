@@ -61,3 +61,4 @@ SymTableEntry globalTable;
 
 //Hashtable for recordtypes
 RecordHashNode recordHashTable;
+int printErrorFlag;

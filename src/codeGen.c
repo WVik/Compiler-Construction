@@ -14,10 +14,30 @@ void reserveMemory(FILE* fp)
   labelCount = 0;
   fprintf(fp,"section .bss\n");
   for(int i=0;i<functionTable[0]->currIndex;i++)
-    fprintf(fp,"%s resd 1\n",functionTable[0]->symTable[i].symName);
+    {
+      int type = functionTable[0]->symTable[i].type;
+      if(type < 2 )
+        fprintf(fp,"%s resd 1\n",functionTable[0]->symTable[i].symName);
+      else
+      {
+        for(int j=0;j<recordTable[type].numFields;j++)
+          fprintf(fp,"%s.%s resd 1\n",functionTable[0]->symTable[i].symName,recordTable[type-2].recordFields[j].symName);
+      }
+
+    }
 
   for(int i=0;i<currGlobalIndex;i++)
-    fprintf(fp,"%s resd 1\n",globalTable[i].symName);
+  {
+    int type = globalTable[i].type;
+    if(type < 2 )
+      fprintf(fp,"%s resd 1\n",globalTable[i].symName);
+    else
+    {
+      for(int j=0;j<recordTable[type].numFields;j++)
+        fprintf(fp,"%s.%s resd 1\n",globalTable[i].symName,recordTable[type-2].recordFields[j].symName);
+    }
+  }
+
 }
 
 

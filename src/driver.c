@@ -37,6 +37,7 @@ char* TString[] = {"TK_ASSIGNOP","TK_COMMENT","TK_FIELDID","TK_ID","TK_NUM","TK_
 #include "parser.h"
 #include "symbolTable.h"
 #include "typeChecker.h"
+#include "semanticAnalyzer.h"
 
 
 int option = -1;
@@ -62,7 +63,8 @@ void removeComments(FILE* fp)
 int main(int argc, char* argv[])
 {
 
- printf("\n\nNOTE: The code works perfectly on testcases 2 and 3. On testcases 1 and 4, it runs on gcc version 4.2.1 and it sometimes shows a segfault. Apologies.\n\n");
+ printf("LEVEL 4: Symbol Table, Type Checker, Semantic Analyzer")
+ printf("\n\nNOTE: Options 0-9 are completely implemented and are error free. Some statements in the code-generator are not handled and hence it won't run.\n\n");
  printf("1) First and Follow Automated\n");
  printf("2) Lexical and Syntactic modules implemented\n");
  printf("3) Panic mode with follow synchronizing sets used for error recovery\n");
@@ -90,6 +92,9 @@ int main(int argc, char* argv[])
  printf("6: Print Global Variables\n");
  printf("7: Print total Memory for each function\n");
  printf("8: Print Information of Records\n\n");
+ printf("9: Compile and verify syntactic and semantic errors in the source code.\n\n");
+
+ printf("Enter your option.\n");
  scanf("%d",&option);
 
  while(1)
@@ -100,12 +105,6 @@ int main(int argc, char* argv[])
 		 break;
 	 }
 
-	 // else if(option==1)
-	 // {
-	 // 	sourceFile = fopen(argv[1],"r");
-	 // 	removeComments(sourceFile);
-	 // 	fclose(sourceFile);
-	 // }
 
 	 else if(option == 1)
 	 {
@@ -124,98 +123,75 @@ int main(int argc, char* argv[])
 		 if(newToken!=NULL)
 			 printf("%d  %s : %s\n",newToken->lineNumber,TString[newToken->token],newToken->lexeme);
 
-
 		 fclose(sourceFile);
+
 	 }
 
 	 else if(option == 2){
 
 
 
-			 clock_t    start_time, end_time;
+			 // clock_t    start_time, end_time;
+       //
+			 // double total_CPU_time, total_CPU_time_in_seconds;
+       //
+			 // start_time = clock();
 
-			 double total_CPU_time, total_CPU_time_in_seconds;
-
-			 start_time = clock();
-
-
-			 //-------------------------------LEXER------------------------------
-			 sourceFile = fopen(argv[1],"r");
-			 initializeLexer();
-			 printf("Printing tokens line by line:\n");
-
-			 TokenInfo newToken = getNextToken(sourceFile);
-
-			 while(overFlag==0 && newToken!=NULL)
-			 {
-				 printf("%d  %s : %s\n",newToken->lineNumber,TString[newToken->token],newToken->lexeme);
-				 newToken = getNextToken(sourceFile);
-			 }
-
-			 if(newToken!=NULL)
-				 printf("%d  %s : %s\n",newToken->lineNumber,TString[newToken->token],newToken->lexeme);
-
-
-			 fclose(sourceFile);
-			 //-----------------------------LEXER FINISHED----------------------
-
-
-
-			 //-----------------------------PARSER-------------------------------
-
-			 sourceFile = fopen(argv[1],"r");
-			 grammarFile = fopen("grammar.txt","r");
+       sourceFile = fopen(argv[1],"r");
+       grammarFile = fopen("grammar.txt","r");
 			 initializeLexer();
 			 initializeParser(grammarFile);
-			 buildTreeAndParse(sourceFile);
-			 //printf("Parsing successful: Program is syntactically correct.");
-			 printf("Printing Parse Tree: \n\n");
-			 printParseTree(root,argv[2]);
-			 printf("Pretty printing parse tree\n");
+       buildTreeAndParse(sourceFile);
+
+       if(syntacticCorrectnessFlag == 0)
+       {
+         printf("Program is syntactically incorrect. Printing parse tree:\n");
+       }
+			 else{
+         printf("Parsing successful: Program is syntactically correct.");
+       }
+
+       // printf("Printing Parse Tree: \n\n");
+			 // printParseTree(root,argv[2]);
+       //
+			 printf("Pretty printing parse tree on the console\n");
 			 prettyPrintParseTree(root,0);
+       printf("\n\n Errors (if any) already printed above the parse tree");
 			 fclose(sourceFile);
 			 fclose(grammarFile);
-
-			 //-----------------------------LEXER FINISHED----------------------
-
-
-
-				 end_time = clock();
-
-				 total_CPU_time  =  (double) (end_time - start_time);
-
-				 total_CPU_time_in_seconds =   total_CPU_time / CLOCKS_PER_SEC;
-
-				 printf("Time in seconds:  %f\n", total_CPU_time_in_seconds);
-				 printf("Ticks: %d\n",CLOCKS_PER_SEC);
-
-
+			 // end_time = clock();
+       //
+			 // total_CPU_time  =  (double) (end_time - start_time);
+       //
+			 // total_CPU_time_in_seconds =   total_CPU_time / CLOCKS_PER_SEC;
+       //
+			 // printf("Time in seconds:  %f\n", total_CPU_time_in_seconds);
+			 // printf("Ticks: %d\n",CLOCKS_PER_SEC);
 	 }
 
 	 else if(option == 3){
 
-		 sourceFile = fopen(argv[1],"r");
-		 grammarFile = fopen("grammar.txt","r");
+     sourceFile = fopen(argv[1],"r");
+     grammarFile = fopen("grammar.txt","r");
+     initializeLexer();
+     initializeParser(grammarFile);
+     buildTreeAndParse(sourceFile);
 
-		 initializeLexer();
-		 initializeParser(grammarFile);
-		 buildTreeAndParse(sourceFile);
-		 createAST(root);
-
-		 initializeSymbolTableVariables();
-		 populateSymbolTable(root);
-
-		 semanticAnalyser(root);
-
-		 //printf("Parsing successful: Program is syntactically correct.");
-		 printf("Printing Parse Tree: \n\n");
-	 //  printParseTree(root,argv[2]);
-
-
-		 printf("Pretty printing parse tree\n");
-		 prettyPrintParseTree(root,0);
-		 fclose(sourceFile);
-		 fclose(grammarFile);
+     if(syntacticCorrectnessFlag == 0)
+     {
+       printf("Program is syntactically incorrect. Can't create AST for the source code\n");
+       fclose(sourceFile);
+       fclose(grammarFile);
+     }
+     else{
+       createAST(root);
+       printf("AST Traversal Order: Children from left to right before parent\n\n");
+       printf("Pretty printing AST tree on the console\n");
+       prettyPrintParseTree(root,0);
+       printf("\n\n Traversal order printed above the AST\n");
+       fclose(sourceFile);
+       fclose(grammarFile);
+     }
 
 	 }
 
@@ -228,33 +204,55 @@ int main(int argc, char* argv[])
 		 initializeLexer();
 		 initializeParser(grammarFile);
 		 buildTreeAndParse(sourceFile);
-		 createAST(root);
 
-		 printf("\nParse Tree Number of Nodes = %d \t\t",n1);
-		 int parseTreeMemory = (int)sizeof(struct treeNode)*n1;
-		 printf("Allocated Memory = %d\n\n",parseTreeMemory);
-		 printf("AST Number of Nodes = %d \t\t",n1-n2);
-		 int astMemory = sizeof(struct treeNode)*(n1-n2);
-		 printf("Allocated Memory = %d\n\n",astMemory);
-		 double percentage = (double)(parseTreeMemory-astMemory)/parseTreeMemory*100;
-		 printf("Compression Percentage = %.2f percent\n",percentage);
+     if(syntacticCorrectnessFlag == 0)
+     {
+       printf("Program is syntactically incorrect. Can't create AST for the source code\n");
+       fclose(sourceFile);
+       fclose(grammarFile);
+     }
+     else{
+        printErrorFlag = 0;
+        createAST(root);
+        printf("\nParse Tree Number of Nodes = %d \t\t",n1);
+        int parseTreeMemory = (int)sizeof(struct treeNode)*n1;
+        printf("Allocated Memory = %d\n\n",parseTreeMemory);
+        printf("AST Number of Nodes = %d \t\t",n1-n2);
+        int astMemory = sizeof(struct treeNode)*(n1-n2);
+        printf("Allocated Memory = %d\n\n",astMemory);
+        double percentage = (double)(parseTreeMemory-astMemory)/parseTreeMemory*100;
+        printf("Compression Percentage = %.2f percent\n",percentage);
+        fclose(sourceFile);
+        fclose(grammarFile);
+     }
+
 	 }
 
 	 else if(option==5)
 	 {
 		 sourceFile = fopen(argv[1],"r");
 		 grammarFile = fopen("grammar.txt","r");
-
 		 initializeLexer();
 		 initializeParser(grammarFile);
 		 buildTreeAndParse(sourceFile);
-		 createAST(root);
 
-		 initializeSymbolTableVariables();
-		 populateSymbolTable(root);
-		 printf("\n\n");
-		 calculateOffset();
-		 printSymbolTable();
+     if(syntacticCorrectnessFlag == 0)
+     {
+       printf("Program is syntactically incorrect. Can't create AST for the source code\n");
+       fclose(sourceFile);
+       fclose(grammarFile);
+     }
+     else{
+        createAST(root);
+        initializeSymbolTableVariables();
+        printErrorFlag = 0;
+        populateSymbolTable(root);
+        printf("\n\n");
+        calculateOffset();
+        printSymbolTable();
+        fclose(sourceFile);
+        fclose(grammarFile);
+     }
 	 }
 
 	 else if(option==6)
@@ -265,52 +263,146 @@ int main(int argc, char* argv[])
 		 initializeLexer();
 		 initializeParser(grammarFile);
 		 buildTreeAndParse(sourceFile);
-		 createAST(root);
 
-		 initializeSymbolTableVariables();
-		 populateSymbolTable(root);
-		 printf("\n\n");
-		 calculateOffset();
-		 printGlobalTable();
+     if(syntacticCorrectnessFlag == 0)
+     {
+       printf("Program is syntactically incorrect. Can't create AST for the source code\n");
+       fclose(sourceFile);
+       fclose(grammarFile);
+     }
+     else{
+       printErrorFlag = 0;
+       createAST(root);
+       initializeSymbolTableVariables();
+       populateSymbolTable(root);
+       printf("\n\n");
+       calculateOffset();
+       printGlobalTable();
+     }
+
 	 }
 
 	 else if(option==7)
 	 {
 		 sourceFile = fopen(argv[1],"r");
 		 grammarFile = fopen("grammar.txt","r");
-
 		 initializeLexer();
 		 initializeParser(grammarFile);
 		 buildTreeAndParse(sourceFile);
-		 createAST(root);
 
-		 initializeSymbolTableVariables();
-		 populateSymbolTable(root);
-		 calculateOffset();
-		 printMemory();
+     if(syntacticCorrectnessFlag == 0)
+     {
+       printf("Program is syntactically incorrect. Can't create AST for the source code\n");
+       fclose(sourceFile);
+       fclose(grammarFile);
+     }
+     else{
+       printErrorFlag = 0;
+       createAST(root);
+       initializeSymbolTableVariables();
+       populateSymbolTable(root);
+       calculateOffset();
+       printMemory();
+     }
+
 	 }
 	 else if(option==8)
 	 {
 		 sourceFile = fopen(argv[1],"r");
 		 grammarFile = fopen("grammar.txt","r");
-
 		 initializeLexer();
 		 initializeParser(grammarFile);
 		 buildTreeAndParse(sourceFile);
-		 createAST(root);
 
-		 initializeSymbolTableVariables();
-		 populateSymbolTable(root);
-		 calculateOffset();
-		 printGlobalRecords();
+     if(syntacticCorrectnessFlag == 0)
+     {
+       printf("Program is syntactically incorrect. Can't create AST for the source code\n");
+       fclose(sourceFile);
+       fclose(grammarFile);
+     }
+     else{
+        printErrorFlag = 0;
+        createAST(root);
+        initializeSymbolTableVariables();
+        populateSymbolTable(root);
+        calculateOffset();
+        printGlobalRecords();
+     }
+
 	}
 
 	else if(option==9)
 	{
+    sourceFile = fopen(argv[1],"r");
+    grammarFile = fopen("grammar.txt","r");
+
+    clock_t    start_time, end_time;
+    double total_CPU_time, total_CPU_time_in_seconds;
+    start_time = clock();
+
+
+    initializeLexer();
+    initializeParser(grammarFile);
+    buildTreeAndParse(sourceFile);
+
+    if(syntacticCorrectnessFlag == 0)
+    {
+      printf("Program is syntactically incorrect. Can't create AST for the source code\n");
+      fclose(sourceFile);
+      fclose(grammarFile);
+    }
+    else{
+      printErrorFlag = 1;
+      createAST(root);
+      initializeSymbolTableVariables();
+      populateSymbolTable(root);
+      calculateOffset();
+      semanticAnalyzer(root);
+      end_time = clock();
+      total_CPU_time  =  (double) (end_time - start_time);
+      total_CPU_time_in_seconds =   total_CPU_time / CLOCKS_PER_SEC;
+      printf("\n\nTime in seconds:  %f\n", total_CPU_time_in_seconds);
+      printf("Ticks: %d\n",CLOCKS_PER_SEC);
+    }
+
+
 
 	}
 	else if(option==10)
 	{
+    sourceFile = fopen(argv[1],"r");
+    grammarFile = fopen("grammar.txt","r");
+
+    clock_t    start_time, end_time;
+    double total_CPU_time, total_CPU_time_in_seconds;
+    start_time = clock();
+
+
+    initializeLexer();
+    initializeParser(grammarFile);
+    buildTreeAndParse(sourceFile);
+
+    if(syntacticCorrectnessFlag == 0)
+    {
+      printf("Program is syntactically incorrect. Can't create AST for the source code\n");
+      fclose(sourceFile);
+      fclose(grammarFile);
+    }
+    else{
+      printErrorFlag = 1;
+      createAST(root);
+      initializeSymbolTableVariables();
+      populateSymbolTable(root);
+      calculateOffset();
+      semanticAnalyzer(root);
+      end_time = clock();
+      total_CPU_time  =  (double) (end_time - start_time);
+      total_CPU_time_in_seconds =   total_CPU_time / CLOCKS_PER_SEC;
+      printf("\n\nTime in seconds:  %f\n", total_CPU_time_in_seconds);
+      printf("Ticks: %d\n",CLOCKS_PER_SEC);
+
+
+    }
 
 	}
 

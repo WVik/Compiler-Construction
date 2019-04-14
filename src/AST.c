@@ -5,8 +5,8 @@
 
 void createAST(TreeNode root)
 {
-  //printf("****************Creating AST***********************");
-  //Arithmetic Expression c
+
+  n1 = n1+1;
 
   if(root->id == terminal)
     return;
@@ -20,7 +20,6 @@ void createAST(TreeNode root)
       temp=temp->next;
     }
 
-  printf("%d \n",root->ruleNum);
 
   switch(root->ruleNum)
   {
@@ -50,6 +49,7 @@ void createAST(TreeNode root)
           root->children = mainFunctionNode;
 
         free(otherFunctionsNode);
+        n2++;
         break;
     }
 
@@ -62,9 +62,12 @@ void createAST(TreeNode root)
       TreeNode endNode = root->children->next->next;
 
       free(mainNode);
+      n2++;
       free(endNode);
+      n2++;
       root->children = stmtsNode->children;
       free(stmtsNode);
+      n2++;
       break;
     }
 
@@ -76,6 +79,7 @@ void createAST(TreeNode root)
 
       functionNode->next = otherFunctionsNode->children;
       free(otherFunctionsNode);
+      n2++;
       break;
     }
 
@@ -83,6 +87,7 @@ void createAST(TreeNode root)
     case 3:
     {
       free(root->children);
+      n2++;
       root->children = NULL;
       break;
     }
@@ -98,11 +103,14 @@ void createAST(TreeNode root)
       //root->children = ipNode;
 
       free(opNode->next);
+      n2++;
       opNode->next = stmtsNode->children;
 
       free(stmtsNode->next);
+      n2++;
       //stmtsNode->children->next = NULL;
       free(stmtsNode);
+      n2++;
 
       break;
     }
@@ -119,6 +127,7 @@ void createAST(TreeNode root)
         root->children = paramListNode->children;
         free(paramListNode->next);
         free(paramListNode);
+        n2+= 5;
         //paramListNode->next = NULL;
         break;
     }
@@ -136,6 +145,7 @@ void createAST(TreeNode root)
       root->children = paramListNode->children;
       free(paramListNode->next);
       free(paramListNode);
+      n2+= 5;
       //paramListNode->next = NULL;
       break;
     }
@@ -144,6 +154,7 @@ void createAST(TreeNode root)
     case 7:
     {
       free(root->children);
+      n2++;
       root->children = NULL;
       break;
     }
@@ -161,6 +172,7 @@ void createAST(TreeNode root)
 
       free(remListNode);
       free(dataTypeNode);
+      n2+= 2;
       break;
 
     }
@@ -175,6 +187,7 @@ void createAST(TreeNode root)
       root->children = type;
 
       free(dt);
+      n2++;
       break;
     }
 
@@ -196,6 +209,7 @@ void createAST(TreeNode root)
       root->children = recordId;
 
       free(record);
+      n2++;
       break;
     }
 
@@ -209,6 +223,7 @@ void createAST(TreeNode root)
 
       free(comma);
       free(paraList);
+      n2+= 2;
       break;
     }
 
@@ -216,6 +231,7 @@ void createAST(TreeNode root)
     case 15:
     {
       free(root->children);
+      n2++;
       root->children = NULL;
       break;
     }
@@ -248,6 +264,7 @@ void createAST(TreeNode root)
           }
           free(dec);
           free(os);
+          n2+= 2;
         }
         else
         {
@@ -256,6 +273,7 @@ void createAST(TreeNode root)
           {
             root->children->next = ret;
             free(os);
+            n2++;
           }
           else
           {
@@ -269,6 +287,7 @@ void createAST(TreeNode root)
           }
         }
         free(typeDef);
+        n2++;
       }
       else
       {
@@ -291,6 +310,7 @@ void createAST(TreeNode root)
           }
           free(dec);
           free(os);
+          n2+=2;
         }
         else
         {
@@ -299,6 +319,7 @@ void createAST(TreeNode root)
           {
             root->children->next->next = ret;
             free(os);
+            n2++;
           }
           else
           {
@@ -329,6 +350,7 @@ void createAST(TreeNode root)
       // td->next = tds->children;
       free(tds);
       free(td);
+      n2+= 2;
       break;
     }
 
@@ -336,6 +358,7 @@ void createAST(TreeNode root)
     case 18:
     {
       free(root->children);
+      n2++;
       root->children = NULL;
       break;
     }
@@ -354,6 +377,7 @@ void createAST(TreeNode root)
       root->children->next = fds->children;
 
       free(fds);
+      n2+= 4;
       break;
     }
 
@@ -371,6 +395,7 @@ void createAST(TreeNode root)
       free(fd1);
       free(fd2);
       free(moreFd);
+      n2+= 3;
       break;
     }
 
@@ -384,7 +409,7 @@ void createAST(TreeNode root)
       free(root->children->next->next);
       free(root->children->next);
       free(root->children);
-
+      n2+= 4;
       root->children = pdt;
       pdt->next = fid;
       fid->next = NULL;
@@ -402,6 +427,7 @@ void createAST(TreeNode root)
 
       free(fd);
       free(mfd);
+      n2+= 2;
       break;
     }
 
@@ -413,6 +439,7 @@ void createAST(TreeNode root)
     case 23:
     {
       free(root->children);
+      n2++;
       root->children = NULL;
       break;
     }
@@ -428,6 +455,7 @@ void createAST(TreeNode root)
       // td->next = tds->children;
       free(dcs);
       free(dc);
+      n2+= 2;
       break;
     }
 
@@ -448,6 +476,7 @@ void createAST(TreeNode root)
 
       free(dt);
       free(gl);
+      n2+= 5;
       break;
 
     }
@@ -457,6 +486,7 @@ void createAST(TreeNode root)
     {
       TreeNode tkg = root->children->next;
       free(root->children);
+      n2++;
       root->children = tkg;
       tkg->next = NULL;
       break;
@@ -480,6 +510,7 @@ void createAST(TreeNode root)
 
       free(stmt);
       free(os);
+      n2+= 2;
       break;
     }
 
@@ -513,6 +544,7 @@ void createAST(TreeNode root)
       ae->next = NULL;
 
       free(sor);
+      n2+= 3;
       break;
     }
 
@@ -524,6 +556,7 @@ void createAST(TreeNode root)
       n->children->next = NULL;
 
       free(n);
+      n2++;
       break;
     }
     //<new_24> - eps
@@ -538,6 +571,7 @@ void createAST(TreeNode root)
     {
       TreeNode n = root->children->next;
       free(root->children);
+      n2++;
       root->children = n;
       n->next = NULL;
       break;
@@ -553,7 +587,7 @@ void createAST(TreeNode root)
       free(root->children->next->next->next->next);
       free(root->children->next->next->next);
       free(root->children->next);
-
+      n2+= 4;
       root->children = fid;
       fid->next = ip;
       ip->next = op;
@@ -568,6 +602,7 @@ void createAST(TreeNode root)
       free(root->children->next->next->next);
       free(root->children->next->next);
       free(root->children);
+      n2+= 3;
       root->children = idl->children;
       break;
     }
@@ -575,6 +610,7 @@ void createAST(TreeNode root)
     case 42:
     {
       free(root->children);
+      n2++;
       root->children = NULL;
       break;
     }
@@ -584,6 +620,7 @@ void createAST(TreeNode root)
       TreeNode idl = root->children->next;
       free(root->children->next->next);
       free(root->children);
+      n2+= 2;
       root->children = idl->children;
       break;
     }
@@ -610,6 +647,8 @@ void createAST(TreeNode root)
       temp->next = endwhileNode;
       free(st);
       free(ost);
+
+      n2+= 5;
       break;
     }
     //<conditionalStmt> - TK_IF TK_OP <booleanExpression> TK_CL TK_THEN <stmt> <otherStmts> <elsePart>
@@ -631,6 +670,7 @@ void createAST(TreeNode root)
       st->children->next = ost->children;
       free(st);
       free(ost);
+      n2+= 6;
       break;
     }
     //<elsePart> - TK_ELSE <stmt> <otherStmts> TK_ENDIF
@@ -646,6 +686,7 @@ void createAST(TreeNode root)
       st->children->next = ost->children;
       free(ost);
       free(st);
+      n2+= 4;
       break;
     }
     //<elsePart> - TK_ENDIF
@@ -653,6 +694,7 @@ void createAST(TreeNode root)
     {
       free(root->children);
       root->children = NULL;
+      n2++;
       break;
     }
 
@@ -669,6 +711,7 @@ void createAST(TreeNode root)
       root->children = read;
       read->next = sor->children;
       free(sor);
+      n2+= 4;
       break;
     }
 
@@ -685,6 +728,8 @@ void createAST(TreeNode root)
       root->children = writeNode;
       writeNode->next = alvarNode->children;
       free(alvarNode);
+
+      n2+= 4;
       break;
     }
 
@@ -723,6 +768,7 @@ void createAST(TreeNode root)
       free(root->children->next);
       free(root->children);
 
+      n2+= 7;
       root->children = op;
       op->next =NULL;
       op->children = be1;
@@ -743,6 +789,7 @@ void createAST(TreeNode root)
 
       free(v1);
       free(v2);
+      n2+= 3;
       break;
     }
     // <booleanExpression> - TK_NOT TK_OP <booleanExpression> TK_CL
@@ -755,6 +802,7 @@ void createAST(TreeNode root)
       free(root->children->next->next);
       free(root->children->next);
 
+      n2+= 3;
       root->children = nt;
       nt->next =NULL;
       nt->children = be;
@@ -789,9 +837,11 @@ void createAST(TreeNode root)
       TreeNode expPrimeNode = root->children->next;
       TreeNode tempNode = root->children->children;
       free(root->children);
+      n2++;
       if(expPrimeNode->children == NULL)
       {
         free(expPrimeNode);
+        n2++;
         root->children = tempNode;
       }
       else{
@@ -804,6 +854,7 @@ void createAST(TreeNode root)
         tempNode->next = t;
         t->next = NULL;
         free(expPrimeNode);
+        n2++;
       }
       break;
     }
@@ -819,6 +870,7 @@ void createAST(TreeNode root)
       if(expNode->children == NULL)
       {
         free(expNode);
+        n2++;
         root->children = opNode;
         opNode->next = varNode;
         varNode->next = NULL;
@@ -834,6 +886,7 @@ void createAST(TreeNode root)
         varNode->next = f;
         f->next = NULL;
         free(expNode);
+        n2++;
       }
       break;
     }
@@ -846,6 +899,7 @@ void createAST(TreeNode root)
       if(termPrimeNode->children == NULL)
       {
         free(termPrimeNode);
+        n2++;
         root->children = f;
         f->next = NULL;
         break;
@@ -862,6 +916,7 @@ void createAST(TreeNode root)
           f->next = varNode;
           varNode->next = NULL;
           free(termPrimeNode);
+          n2++;
       }
       break;
     }
@@ -873,9 +928,11 @@ void createAST(TreeNode root)
       TreeNode tpNode = root->children->next->next;
       free(root->children->next);
       free(root->children);
+      n2+= 2;
       if(tpNode->children == NULL)
       {
         free(tpNode);
+        n2++;
         root->children =opNode;
         opNode->next =varNode;
         varNode->next = NULL;
@@ -891,6 +948,7 @@ void createAST(TreeNode root)
         varNode->next = f;
         f->next = NULL;
         free(tpNode);
+        n2++;
       }
       break;
     }
@@ -900,6 +958,7 @@ void createAST(TreeNode root)
     case 60:
     {
       free(root->children);
+      n2++;
       root->children = NULL;
       break;
     }
@@ -912,6 +971,7 @@ void createAST(TreeNode root)
       free(aeNode->next);
       root->children = aeNode->children;
       free(aeNode);
+      n2+= 3;
       break;
     }
 
@@ -921,6 +981,7 @@ void createAST(TreeNode root)
       TreeNode allNode = root->children;
       root->children = allNode->children;
       free(allNode);
+      n2++;
       break;
     }
 
@@ -948,6 +1009,7 @@ void createAST(TreeNode root)
       if(tempNode->children == NULL)
       {
         free(tempNode);
+        n2++;
         root->children->next = NULL;
       }
       else
@@ -968,6 +1030,7 @@ void createAST(TreeNode root)
     {
       TreeNode f = root->children->next;
       free(root->children);
+      n2++;
       root->children = f;
       f->next =NULL;
       break;
@@ -978,6 +1041,7 @@ void createAST(TreeNode root)
     case 70:
     {
       free(root->children);
+      n2++;
       root->children = NULL;
       break;
     }
@@ -990,6 +1054,7 @@ void createAST(TreeNode root)
 
       root->children = or->children;
       free(or);
+      n2+= 3;
       break;
     }
     // <optionalReturn> - TK_SQL <idList> TK_SQR
@@ -1001,12 +1066,14 @@ void createAST(TreeNode root)
 
       root->children = idl->children;
       free(idl);
+      n2+= 3;
       break;
     }
     // <optionalReturn> - eps
     case 88:
     {
       free(root->children);
+      n2++;
       root->children = NULL;
       break;
     }
@@ -1018,6 +1085,7 @@ void createAST(TreeNode root)
       root->children = id;
       id->next = mid->children;
       free(mid);
+      n2++;
       break;
     }
     // <more_ids> - TK_COMMA <idList>
@@ -1027,12 +1095,14 @@ void createAST(TreeNode root)
       free(root->children);
       root->children = idl->children;
       free(idl);
+      n2+= 2;
       break;
     }
     // <more_ids> - eps
     case 91:
     {
       free(root->children);
+      n2++;
       root->children = NULL;
       break;
     }
