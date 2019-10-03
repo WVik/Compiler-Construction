@@ -1,4 +1,4 @@
-#Compiler-Construction
+# Compiler-Construction
 
 
 This repository contains code for a compiler of a custom language. The different modules of the compiler implemented are: 
@@ -11,15 +11,15 @@ This repository contains code for a compiler of a custom language. The different
 
 **Please switch to the semantics branch to run the compiler upto the semantic analyser phase. The changes will be merged to master after completing the code generator**
 
-##Input
+## Input
 The driver function can be found in `driver.c`. It expects a code.txt file, a grammar.txt file and which modules to run as command line arguments. The grammar is expected to be LL(1) compatible. Alternatively, a makefile is also present in which the default target runs all modules together. A `code.asm` file is generated which can be run using NASM-64. 
 
-##Lexer
+## Lexer
 The lexer outputs a line-wise list of tokens of the language. The list of tokens can be found in `lexer.c`. It also points out the errors in lexing the input, as `invalid token on line 64`
 
-##Parser
+## Parser
 The parser converts the tokens given by the lexer into a parse tree. The parse tree contains redundant nodes as well, which are later removed by the semantic phase. The output of the parser can be seen as an output on the terminal as well. 
 
-##Semantics
+## Semantics
 The semantic analyser conver the parse tree into an AST. The AST can also be seen as an output on the command line. Some advanced error detection techniques are also used here. The synchronization set can be easily modified in the `AST.c` file. 
 
